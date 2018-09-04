@@ -56,6 +56,16 @@ namespace GG2PlayerScale
         private float _startScale;
 
         /// <summary>
+        /// Is a target scale set?
+        /// </summary>
+        private float? _targetScale;
+
+        /// <summary>
+        /// Target scale getter.
+        /// </summary>
+        public float? TargetScale { get { return _targetScale;  } }
+
+        /// <summary>
         /// Base per second.
         /// </summary>
         private double _base;
@@ -76,6 +86,11 @@ namespace GG2PlayerScale
         private float _lastScale;
 
         /// <summary>
+        /// Event on completed progess.
+        /// </summary>
+        public event EventHandler<EventArgs> Completed;
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="timeBox"></param>
@@ -93,7 +108,9 @@ namespace GG2PlayerScale
         /// <param name="startScale">Start scale of the player</param>
         /// <param name="baseScale">Base multiplication target over time</param>
         /// <param name="baseSeconds">Seconds required to reach target</param>
-        public void StartProcess(float startScale, float baseScale, int baseSeconds)
+        /// <param name="countdown">Countdown until scaling starts.</param>
+        /// <param name="targetScale">Target scale when to end the progress.</param>
+        public void StartProcess(float startScale, float baseScale, int baseSeconds, int countdown, float? targetScale)
         {
             if (this._enabled)
             {
@@ -104,7 +121,10 @@ namespace GG2PlayerScale
             this._base = Math.Pow(baseScale, (1.0 / (double)baseSeconds));
             this._lastSecondDisplay = -1;
 
-            this._startTime = DateTime.Now;
+            DateTime startTime = DateTime.Now + new TimeSpan(0, 0, countdown);
+
+            this._startTime = startTime;
+            this._targetScale = targetScale;
 
             this._paused = false;
             this._enabled = true;                
@@ -162,9 +182,27 @@ namespace GG2PlayerScale
 
             float lastValue = this.GetCurrentScale();
             this._enabled = false;
+            this._paused = false;
             MainForm.WriteLabelThreadSafe(this._timeBox, "-");
 
             return lastValue;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StopProcessInternally()
+        {
+            if (!this._enabled)
+            {
+                throw new Exception("Not running");
+            }
+
+            MainForm.WriteLabelThreadSafe(this._timeBox, "-");
+            this._enabled = false;
+            this._paused = false;
+
+            this.Completed?.Invoke(this, new EventArgs());
         }
 
         /// <summary>
@@ -183,15 +221,26 @@ namespace GG2PlayerScale
             }
 
             TimeSpan seconds = (DateTime.Now - this._startTime);
+
+            this.UpdateSecondDisplay(seconds);
+
             double secondsFloat = seconds.TotalSeconds;
             if (secondsFloat < 0)
             {
                 return this._startScale;
             }
             
-            this.UpdateSecondDisplay(seconds);
-
             this._lastScale = (float)(this._startScale * Math.Pow(this._base, secondsFloat));
+
+            if(this._targetScale != null)
+            {
+                if( (this._lastScale < this._targetScale && this._base < 1) || 
+                    (this._lastScale > this._targetScale && this._base > 1))
+                {
+                    this._lastScale = this._targetScale.Value;
+                    this.StopProcessInternally();
+                }                
+            }
 
             return this._lastScale;
         }
@@ -201,7 +250,8 @@ namespace GG2PlayerScale
         /// </summary>
         private void UpdateSecondDisplay(TimeSpan seconds)
         {
-            int secondsInt = (int)Math.Floor(seconds.TotalSeconds);
+            double totalSeconds = seconds.TotalSeconds;
+            int secondsInt = (int)Math.Floor(totalSeconds);
 
             if(secondsInt == this._lastSecondDisplay)
             {
@@ -210,7 +260,16 @@ namespace GG2PlayerScale
 
             this._lastSecondDisplay = secondsInt;
 
-            string timeDisplay = String.Format("{0:0}:{1:00}:{2:00}", new object[] { seconds.Hours, seconds.Minutes, seconds.Seconds });
+            string timeDisplay = "";
+            if (totalSeconds >= 0)
+            {
+                timeDisplay = String.Format("{0:0}:{1:00}:{2:00}", new object[] { seconds.Hours, seconds.Minutes, seconds.Seconds });
+            }
+            else
+            {
+                secondsInt = (int)Math.Round(seconds.Negate().TotalSeconds);
+                timeDisplay = secondsInt.ToString();
+            }
 
             MainForm.WriteLabelThreadSafe(this._timeBox, timeDisplay);
         }

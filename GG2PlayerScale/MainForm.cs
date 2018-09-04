@@ -56,12 +56,27 @@ namespace GG2PlayerScale
         /// </summary>
         public const float DEFAULT_HEIGHT = 164.0f;
 
+        /// <summary>
+        /// Is paused?
+        /// </summary>
+        private bool _paused;
+
+        /// <summary>
+        /// Is paused?
+        /// </summary>
+        private bool _scalePaused;
+
         public MainForm()
         {
             InitializeComponent();
 
             this._jsonIni = new JSONINIFile();
             this._playerHeight = DEFAULT_HEIGHT;
+
+            this._paused = false;
+            this._scalePaused = false;
+
+            this.cbTargetTimeUnit.SelectedIndex = 0;
 
             string pHeight = this._jsonIni.Read("Height", null, "invalid");
             float pHeightF;
@@ -97,6 +112,7 @@ namespace GG2PlayerScale
 
 
             this._scaleCalculator = new ScaleOverTimeCalculator(this._frmCurrentHeight.lblMultiplicationTime);
+            this._scaleCalculator.Completed += ScaleProgessCompleted;
 
             _threadEnd = false;
             _hasBeenCapturing = false;
@@ -253,6 +269,8 @@ namespace GG2PlayerScale
                 if (!this._isPatched)
                 {
                     this.PatchMemory();
+
+                    this.ResumeProcessManager();
                 }
 
                 this.UpdateScale();
@@ -260,6 +278,7 @@ namespace GG2PlayerScale
             }
             else
             {
+                this.PauseProcessManager();
                 WriteLabelThreadSafe(this.lblConnect, "Executable doesn't seem to be running");
                 this._isPatched = false;
             }
@@ -702,16 +721,60 @@ namespace GG2PlayerScale
         /// <param name="e"></param>
         private void btnProcessStart_Click(object sender, EventArgs e)
         {
-            float targetScale = 1.0f, targetMinutes = 0.0f;
+            float targetScale = 1.0f, targetTime = 0.0f;
 
-            if(!float.TryParse(this.txtTargetScale.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out targetScale) ||
-               !float.TryParse(this.txtTargetMinutes.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out targetMinutes) ||
-               targetScale <= 0.0f || targetMinutes <= 0)
+            if(!float.TryParse(this.txtTargetScale.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out targetScale) 
+               || targetScale <= 0.0f || targetScale == 1.0f)
             {
-                MessageBox.Show("Input values are invalid", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Scale factor is invalid: must be a positive number other than 1.0.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
-            if(this._scaleCalculator.Enabled)
+            if (!float.TryParse(this.txtTargetTimeValue.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out targetTime)
+               || targetTime <= 0.0f)
+            {
+                MessageBox.Show("Time span is invalid: must be a positive number other than 1.0.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            this.ReadPlayerScale();
+            float currentScale = this._playerScale;
+
+            float? endScale = null;
+            if (this.chkEnableEndScale.Checked)
+            {
+                float endScaleValue = 1.0f;
+                if (!float.TryParse(this.txtEndScale.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out endScaleValue)
+                    || endScaleValue <= 0.0f)
+                {
+                    MessageBox.Show("End scale is invalid. It must be a positive value.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if(targetScale < 1 && endScaleValue >= currentScale)
+                {
+                    MessageBox.Show("Your end scale (scale you reach) must be lower than your base scale if the scale factor is below 1.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (targetScale > 1 && endScaleValue <= currentScale)
+                {
+                    MessageBox.Show("Your end scale (scale you reach) must be above than your base scale if the scale factor is above 1.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                endScale = endScaleValue;
+            }
+
+            int countDownValue = 0;
+            if (!int.TryParse(this.txtCountdown.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out countDownValue)
+                    || countDownValue < 0)
+            {
+                MessageBox.Show("The countdown must be a positive integer (including zero).", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (this._scaleCalculator.Enabled)
             {
                 float newScale = this._scaleCalculator.StopProcess();
                 MainForm.WriteTextboxThreadSafe(this.txtPlayerScale, newScale.ToString(CultureInfo.InvariantCulture));
@@ -721,12 +784,15 @@ namespace GG2PlayerScale
                 return;
             }
 
-            this.ReadPlayerScale();
-            float currentScale = this._playerScale;
+            double factor = 60.0;
+            if(this.cbTargetTimeUnit.SelectedIndex == 1)
+            {
+                factor = 1.0;
+            }
 
-            int seconds = (int)Math.Round(targetMinutes * 60.0);
+            int seconds = (int)Math.Round(targetTime * factor);            
 
-            this._scaleCalculator.StartProcess(currentScale, targetScale, seconds);
+            this._scaleCalculator.StartProcess(currentScale, targetScale, seconds, countDownValue, endScale);
             MainForm.WriteButtonLabelThreadSafe(this.btnProcessPause, "Pause");
             MainForm.WriteButtonLabelThreadSafe(this.btnProcessStart, "Stop process");
             this.ResetFields(false);
@@ -738,10 +804,20 @@ namespace GG2PlayerScale
         /// <param name="enableDefaultFields">Reenable them (true) or disable them (false).</param>
         private void ResetFields(bool enableDefaultFields)
         {
+            if(InvokeRequired)
+            {
+                this.Invoke(new Action(() => ResetFields(enableDefaultFields)));
+                return;
+            }
+
             this.txtPlayerHeight.Enabled = enableDefaultFields;
             this.txtPlayerScale.Enabled = enableDefaultFields;
-            this.txtTargetMinutes.Enabled = enableDefaultFields;
+            this.txtTargetTimeValue.Enabled = enableDefaultFields;
+            this.cbTargetTimeUnit.Enabled = enableDefaultFields;
             this.txtTargetScale.Enabled = enableDefaultFields;
+            this.chkEnableEndScale.Enabled = enableDefaultFields;
+            this.txtEndScale.Enabled = enableDefaultFields && this.chkEnableEndScale.Checked;
+            this.txtCountdown.Enabled = enableDefaultFields;
             this.btnProcessPause.Enabled = !enableDefaultFields;
         }
 
@@ -767,6 +843,99 @@ namespace GG2PlayerScale
                 this._scaleCalculator.Pause();
                 MainForm.WriteButtonLabelThreadSafe(this.btnProcessPause, "Resume");
             }                        
+        }
+
+        /// <summary>
+        /// Continues running scaling processes if required.
+        /// </summary>
+        private void ResumeProcessManager(bool invoked = false)
+        {
+            if(!this._paused && !invoked)
+            {
+                return;
+            }
+            this._paused = false;
+            if (InvokeRequired)
+            {
+                this.Invoke(new Action(() => ResumeProcessManager(true)));
+                return;
+            }
+
+            if (this._scaleCalculator.Enabled)
+            {
+                this.btnProcessPause.Enabled = true;
+                if (this._scalePaused && this._scaleCalculator.Paused)
+                {
+                    this._scaleCalculator.Resume();
+                }
+            }
+
+            this._scalePaused = false;
+
+            this.btnProcessStart.Enabled = true;            
+        }
+
+        /// <summary>
+        /// Continues running scaling processes if required.
+        /// </summary>
+        private void PauseProcessManager(bool invoked = false)
+        {
+            if (this._paused && !invoked)
+            {
+                return;
+            }
+            this._paused = true;
+            if (InvokeRequired)
+            {
+                this.Invoke(new Action(() => PauseProcessManager(true)));
+                return;
+            }
+
+            this._scalePaused = false;
+
+            if(this._scaleCalculator.Enabled)
+            {
+                if(!this._scaleCalculator.Paused)
+                {
+                    this._scaleCalculator.Pause();
+                    this._scalePaused = true;
+                }
+            }
+
+            this.btnProcessStart.Enabled = false;
+            this.btnProcessPause.Enabled = false;
+        }
+
+        /// <summary>
+        /// Checkbox value has changed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void chkEnableEndScale_CheckedChanged(object sender, EventArgs e)
+        {
+            txtEndScale.Enabled = chkEnableEndScale.Checked;
+        }
+
+        /// <summary>
+        /// Scaling progress has been completed without cancellation.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ScaleProgessCompleted(object sender, EventArgs e)
+        {
+            float current = 1.0f;
+            float? target = this._scaleCalculator.TargetScale;
+            if(target != null)
+            {
+                current = target.Value;
+            }
+
+            MainForm.WriteTextboxThreadSafe(this.txtPlayerScale,
+                current.ToString(CultureInfo.InvariantCulture)
+            );
+            MainForm.WriteButtonLabelThreadSafe(this.btnProcessStart, "Start process");
+
+            this.ResetFields(true);
         }
     }
 }

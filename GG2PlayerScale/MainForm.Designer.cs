@@ -39,11 +39,17 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.btnProcessPause = new System.Windows.Forms.Button();
             this.btnProcessStart = new System.Windows.Forms.Button();
-            this.label4 = new System.Windows.Forms.Label();
-            this.txtTargetMinutes = new System.Windows.Forms.TextBox();
+            this.txtTargetTimeValue = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.txtTargetScale = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.cbTargetTimeUnit = new System.Windows.Forms.ComboBox();
+            this.txtCountdown = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.chkEnableEndScale = new System.Windows.Forms.CheckBox();
+            this.txtEndScale = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -130,16 +136,22 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.txtEndScale);
+            this.groupBox3.Controls.Add(this.chkEnableEndScale);
+            this.groupBox3.Controls.Add(this.label6);
+            this.groupBox3.Controls.Add(this.label4);
+            this.groupBox3.Controls.Add(this.label5);
+            this.groupBox3.Controls.Add(this.txtCountdown);
+            this.groupBox3.Controls.Add(this.cbTargetTimeUnit);
             this.groupBox3.Controls.Add(this.btnProcessPause);
             this.groupBox3.Controls.Add(this.btnProcessStart);
-            this.groupBox3.Controls.Add(this.label4);
-            this.groupBox3.Controls.Add(this.txtTargetMinutes);
+            this.groupBox3.Controls.Add(this.txtTargetTimeValue);
             this.groupBox3.Controls.Add(this.label3);
             this.groupBox3.Controls.Add(this.txtTargetScale);
             this.groupBox3.Controls.Add(this.label2);
             this.groupBox3.Location = new System.Drawing.Point(12, 213);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(453, 137);
+            this.groupBox3.Size = new System.Drawing.Size(453, 207);
             this.groupBox3.TabIndex = 3;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Gradual scale change over time";
@@ -147,7 +159,7 @@
             // btnProcessPause
             // 
             this.btnProcessPause.Enabled = false;
-            this.btnProcessPause.Location = new System.Drawing.Point(9, 109);
+            this.btnProcessPause.Location = new System.Drawing.Point(9, 178);
             this.btnProcessPause.Name = "btnProcessPause";
             this.btnProcessPause.Size = new System.Drawing.Size(438, 23);
             this.btnProcessPause.TabIndex = 8;
@@ -157,7 +169,7 @@
             // 
             // btnProcessStart
             // 
-            this.btnProcessStart.Location = new System.Drawing.Point(9, 80);
+            this.btnProcessStart.Location = new System.Drawing.Point(9, 149);
             this.btnProcessStart.Name = "btnProcessStart";
             this.btnProcessStart.Size = new System.Drawing.Size(438, 23);
             this.btnProcessStart.TabIndex = 7;
@@ -165,22 +177,13 @@
             this.btnProcessStart.UseVisualStyleBackColor = true;
             this.btnProcessStart.Click += new System.EventHandler(this.btnProcessStart_Click);
             // 
-            // label4
+            // txtTargetTimeValue
             // 
-            this.label4.Location = new System.Drawing.Point(394, 52);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(53, 20);
-            this.label4.TabIndex = 6;
-            this.label4.Text = "minutes.";
-            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // txtTargetMinutes
-            // 
-            this.txtTargetMinutes.Location = new System.Drawing.Point(155, 52);
-            this.txtTargetMinutes.Name = "txtTargetMinutes";
-            this.txtTargetMinutes.Size = new System.Drawing.Size(233, 20);
-            this.txtTargetMinutes.TabIndex = 5;
-            this.txtTargetMinutes.Text = "30";
+            this.txtTargetTimeValue.Location = new System.Drawing.Point(155, 52);
+            this.txtTargetTimeValue.Name = "txtTargetTimeValue";
+            this.txtTargetTimeValue.Size = new System.Drawing.Size(195, 20);
+            this.txtTargetTimeValue.TabIndex = 5;
+            this.txtTargetTimeValue.Text = "30";
             // 
             // label3
             // 
@@ -205,14 +208,82 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(140, 20);
             this.label2.TabIndex = 2;
-            this.label2.Text = "Reach the scale";
+            this.label2.Text = "Scale by factor";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // cbTargetTimeUnit
+            // 
+            this.cbTargetTimeUnit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbTargetTimeUnit.FormattingEnabled = true;
+            this.cbTargetTimeUnit.Items.AddRange(new object[] {
+            "minutes",
+            "seconds"});
+            this.cbTargetTimeUnit.Location = new System.Drawing.Point(356, 52);
+            this.cbTargetTimeUnit.Name = "cbTargetTimeUnit";
+            this.cbTargetTimeUnit.Size = new System.Drawing.Size(91, 21);
+            this.cbTargetTimeUnit.TabIndex = 9;
+            // 
+            // txtCountdown
+            // 
+            this.txtCountdown.Location = new System.Drawing.Point(155, 78);
+            this.txtCountdown.Name = "txtCountdown";
+            this.txtCountdown.Size = new System.Drawing.Size(195, 20);
+            this.txtCountdown.TabIndex = 11;
+            this.txtCountdown.Text = "0";
+            // 
+            // label5
+            // 
+            this.label5.Location = new System.Drawing.Point(356, 78);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(91, 20);
+            this.label5.TabIndex = 12;
+            this.label5.Text = "seconds.";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // label4
+            // 
+            this.label4.Location = new System.Drawing.Point(9, 77);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(140, 20);
+            this.label4.TabIndex = 13;
+            this.label4.Text = "after counting down";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label6
+            // 
+            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.label6.Location = new System.Drawing.Point(9, 101);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(438, 20);
+            this.label6.TabIndex = 14;
+            this.label6.Text = "(0 second countdown means it will immediately start)";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // chkEnableEndScale
+            // 
+            this.chkEnableEndScale.Location = new System.Drawing.Point(9, 122);
+            this.chkEnableEndScale.Name = "chkEnableEndScale";
+            this.chkEnableEndScale.Size = new System.Drawing.Size(140, 21);
+            this.chkEnableEndScale.TabIndex = 15;
+            this.chkEnableEndScale.Text = "until reaching the scale:";
+            this.chkEnableEndScale.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.chkEnableEndScale.UseVisualStyleBackColor = true;
+            this.chkEnableEndScale.CheckedChanged += new System.EventHandler(this.chkEnableEndScale_CheckedChanged);
+            // 
+            // txtEndScale
+            // 
+            this.txtEndScale.Enabled = false;
+            this.txtEndScale.Location = new System.Drawing.Point(155, 123);
+            this.txtEndScale.Name = "txtEndScale";
+            this.txtEndScale.Size = new System.Drawing.Size(292, 20);
+            this.txtEndScale.TabIndex = 16;
+            this.txtEndScale.Text = "0.5";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(477, 358);
+            this.ClientSize = new System.Drawing.Size(477, 432);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox2);
@@ -245,13 +316,19 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtPlayerHeight;
         private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox txtTargetMinutes;
+        private System.Windows.Forms.TextBox txtTargetTimeValue;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox txtTargetScale;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnProcessPause;
         private System.Windows.Forms.Button btnProcessStart;
+        private System.Windows.Forms.ComboBox cbTargetTimeUnit;
+        private System.Windows.Forms.TextBox txtEndScale;
+        private System.Windows.Forms.CheckBox chkEnableEndScale;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox txtCountdown;
     }
 }
 
