@@ -194,9 +194,18 @@ namespace GG2PlayerScale
         {
             while (!_threadEnd)
             {
+                DateTime dt = DateTime.Now;
+
                 this.LoopMain();
                 GC.Collect();
-                Thread.Sleep(100);
+
+                TimeSpan neededTime = DateTime.Now - dt;
+
+                //Target frame rate 45 FPS - thus: 22.2 ms
+                double ms = 22.2 - neededTime.TotalMilliseconds;
+                ms = Math.Max(5.0, ms); //Wait at least 5 ms
+                int msInt = (int)Math.Floor(ms);
+                Thread.Sleep(msInt);
             }
             
             this.UnpatchGame();
