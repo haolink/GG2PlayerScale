@@ -17,6 +17,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Runtime.Serialization.Json;
+using System.Globalization;
 
 namespace GGVREditor
 {
@@ -228,6 +229,66 @@ namespace GGVREditor
         public bool ReadBool(string Key, string Section = null, bool Default = false)
         {
             return ((Read(Key, Section, Default ? "1" : "0")) == "1");
+        }
+
+        /// <summary>
+        /// Writes an integer.
+        /// </summary>
+        /// <param name="Key"></param>
+        /// <param name="Value"></param>
+        /// <param name="Section"></param>
+        public void WriteInt(string Key, int Value, string Section = null)
+        {
+            this.Write(Key, Value.ToString(), Section);
+        }
+
+        /// <summary>
+        /// Reads an integer.
+        /// </summary>
+        /// <param name="Key"></param>
+        /// <param name="Section"></param>
+        /// <param name="Default"></param>
+        /// <returns></returns>
+        public int ReadInt(string Key, string Section = null, int Default = 0)
+        {
+            string v = this.Read(Key, Section, null);
+            if(v == null)
+            {
+                return Default;
+            }
+            int result = Default;
+            int.TryParse(v, out result);
+            return result;
+        }
+
+        /// <summary>
+        /// Writes an integer.
+        /// </summary>
+        /// <param name="Key"></param>
+        /// <param name="Value"></param>
+        /// <param name="Section"></param>
+        public void WriteFloat(string Key, double Value, string Section = null)
+        {
+            this.Write(Key, Value.ToString(CultureInfo.InvariantCulture), Section);
+        }
+
+        /// <summary>
+        /// Reads an integer.
+        /// </summary>
+        /// <param name="Key"></param>
+        /// <param name="Section"></param>
+        /// <param name="Default"></param>
+        /// <returns></returns>
+        public double ReadFloat(string Key, string Section = null, double Default = 0.0)
+        {
+            string v = this.Read(Key, Section, null);
+            if (v == null)
+            {
+                return Default;
+            }
+            double result = Default;
+            double.TryParse(v, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
+            return result;
         }
     }
 }

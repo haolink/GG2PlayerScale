@@ -88,6 +88,14 @@ namespace GG2PlayerScale
             MainForm.WriteTextboxThreadSafe(txtPlayerHeight, this._playerHeight.ToString(CultureInfo.InvariantCulture));
             this._jsonIni.Write("Height", this._playerHeight.ToString(CultureInfo.InvariantCulture));
 
+            this.txtTargetScale.Text = this._jsonIni.ReadFloat("ProcessSpeed", null, 0.5).ToString(CultureInfo.InvariantCulture);
+            this.txtTargetTimeValue.Text = this._jsonIni.ReadFloat("ProcessTime", null, 30).ToString(CultureInfo.InvariantCulture);
+            this.cbTargetTimeUnit.SelectedIndex = this._jsonIni.ReadInt("ProcessTimeUnit", null, 0);
+            this.chkEnableEndScale.Checked = this._jsonIni.ReadBool("ProcessHasEndScale", null, false);
+            this.txtEndScale.Text = this._jsonIni.ReadFloat("ProcessEndScale", null, 0.1).ToString(CultureInfo.InvariantCulture);
+
+            this.chkEnableEndScale_CheckedChanged(null, new EventArgs());
+
             try
             {
                 _oculusWrapper = new OculusTouchWrapper();
@@ -789,6 +797,12 @@ namespace GG2PlayerScale
             {
                 factor = 1.0;
             }
+
+            this._jsonIni.WriteFloat("ProcessSpeed", targetScale);
+            this._jsonIni.WriteFloat("ProcessTime", targetTime);
+            this._jsonIni.WriteInt  ("ProcessTimeUnit", this.cbTargetTimeUnit.SelectedIndex);
+            this._jsonIni.WriteBool ("ProcessHasEndScale", endScale.HasValue);
+            this._jsonIni.WriteFloat("ProcessEndScale", endScale.Value);            
 
             int seconds = (int)Math.Round(targetTime * factor);            
 
