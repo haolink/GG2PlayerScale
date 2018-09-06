@@ -88,6 +88,13 @@ namespace GG2PlayerScale
             MainForm.WriteTextboxThreadSafe(txtPlayerHeight, this._playerHeight.ToString(CultureInfo.InvariantCulture));
             this._jsonIni.Write("Height", this._playerHeight.ToString(CultureInfo.InvariantCulture));
 
+            this._subtitleOffset = (float)(this._jsonIni.ReadFloat("SubtitleOffset", null, 30.0));
+            if(this._subtitleOffset < -20 || this._subtitleOffset > 100)
+            {
+                this._subtitleOffset = 30.0f;
+            }
+            this.txtSubtitleOffset.Text = this._subtitleOffset.ToString(CultureInfo.InvariantCulture);
+
             this.txtTargetScale.Text = this._jsonIni.ReadFloat("ProcessSpeed", null, 0.5).ToString(CultureInfo.InvariantCulture);
             this.txtTargetTimeValue.Text = this._jsonIni.ReadFloat("ProcessTime", null, 30).ToString(CultureInfo.InvariantCulture);
             this.cbTargetTimeUnit.SelectedIndex = this._jsonIni.ReadInt("ProcessTimeUnit", null, 0);
@@ -179,6 +186,11 @@ namespace GG2PlayerScale
         /// Player scale.
         /// </summary>
         private float _playerScale;
+
+        /// <summary>
+        /// Subtitle offset.
+        /// </summary>
+        private float _subtitleOffset;
 
         /// <summary>
         /// Adjust the view height.
@@ -280,6 +292,7 @@ namespace GG2PlayerScale
 
             this.ReadPlayerScale();
             this.ReadPlayerHeight();
+            this.ReadSubtitleOffset();
 
             if (_memEditor.Connect())
             {
@@ -306,7 +319,7 @@ namespace GG2PlayerScale
         /// </summary>
         private void CaptureScreenshot()
         {
-            Process[] processes = Process.GetProcessesByName("OculusMirror");
+            Process[] processes = Process.GetProcessesByName("GalGun2-Win64-Shipping");
             Process proc = null;
             if(processes.Length > 0)
             {
@@ -384,13 +397,30 @@ namespace GG2PlayerScale
             float newHeight = DEFAULT_HEIGHT;
             if (float.TryParse(txtPlayerHeight.Text.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out newHeight))
             {
-                if(newHeight != this._playerHeight && newHeight > 100 && newHeight < 250)
+                if(newHeight != this._playerHeight && newHeight >= 100 && newHeight <= 250)
                 {
                     this._playerHeight = newHeight;
                     this._jsonIni.Write("Height", this._playerHeight.ToString(CultureInfo.InvariantCulture));
                     //this._jsonIni.SaveData();
                 }
             }            
+        }
+
+        /// <summary>
+        /// Reads subtitle offset.
+        /// </summary>
+        private void ReadSubtitleOffset()
+        {
+            float newOffset = this._subtitleOffset;
+            if (float.TryParse(txtSubtitleOffset.Text.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out newOffset))
+            {
+                if (newOffset != this._subtitleOffset && newOffset >= -20 && newOffset <= 100)
+                {
+                    this._playerHeight = newOffset;
+                    this._jsonIni.WriteFloat("SubtitleOffset", this._subtitleOffset);
+                    //this._jsonIni.SaveData();
+                }
+            }
         }
 
         /// <summary>
@@ -495,7 +525,7 @@ namespace GG2PlayerScale
             }
 
             this._patchAddress = address;
-            byte[] patchCode = new byte[]
+            /*byte[] patchCode = new byte[]
             {
                 //Data matrix - 0x50 bytes long
                 //0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
@@ -527,16 +557,51 @@ namespace GG2PlayerScale
                 0x80, 0x5F, 0x02, 0x00, 0x00, 0x0F, 0x58, 0x4B, 0x40, 0x5B, 0x58, 0x0F, 0x29, 0x4B, 0x10, 0x0F,
                 0x28, 0x81, 0xA0, 0x01, 0x00, 0x00, 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, 0x59, 0xD3, 0x5C, 0x26,
                 0xF6, 0x7F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+            };*/
+            byte[] patchCode = new byte[]
+            {
+                //Data matrix - 0x60 bytes long
+                //0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
+                0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x16, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x43, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x41, 0x00, 0x00, 0x00, 0x00,
+
+                //Assembly code patch 1: 0x70 bytes long
+                //0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
+                0x0F, 0x28, 0x89, 0x90, 0x01, 0x00, 0x00, 0x50, 0x53, 0x48, 0x8B, 0x01, 0x8B, 0x98, 0x30, 0xF9,
+                0xFF, 0xFF, 0x81, 0xFB, 0x52, 0x00, 0x6F, 0x00, 0x75, 0x2E, 0x90, 0x90, 0x90, 0x90, 0x48, 0xBB,
+                0x00, 0x00, 0x6D, 0x90, 0x10, 0x02, 0x00, 0x00, 0x8B, 0x03, 0x89, 0x43, 0x28, 0x8B, 0x81, 0x64,
+                0x01, 0x00, 0x00, 0x89, 0x43, 0x04, 0x89, 0x43, 0x38, 0x0F, 0x28, 0x43, 0x10, 0x0F, 0x5C, 0x43,
+                0x20, 0x0F, 0x59, 0x43, 0x30, 0x0F, 0x5C, 0xC8, 0x5B, 0x58, 0x48, 0x8B, 0xC2, 0x0F, 0x28, 0xC1,
+                0xF3, 0x0F, 0x11, 0x0A, 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, 0xE1, 0x1A, 0x80, 0x37, 0xF6, 0x7F,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+                //Assembly code patch 2: 0xB0 bytes long
+                //0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F                
+                0x0F, 0x28, 0x89, 0x90, 0x01, 0x00, 0x00, 0x50, 0x53, 0x48, 0xBB, 0x00, 0x00, 0x6D, 0x90, 0x10,
+                0x02, 0x00, 0x00, 0x8B, 0x81, 0xBC, 0x01, 0x00, 0x00, 0x3D, 0x11, 0x00, 0x02, 0x00, 0x75, 0x66,
+                0x90, 0x90, 0x90, 0x90, 0x8B, 0x81, 0x7C, 0x01, 0x00, 0x00, 0x3D, 0x00, 0x00, 0x80, 0x3F, 0x75,
+                0x55, 0x90, 0x90, 0x90, 0x90, 0x8B, 0x41, 0x18, 0x83, 0xF8, 0x65, 0x74, 0x45, 0x90, 0x90, 0x90,
+                0x90, 0x8B, 0x81, 0x18, 0x01, 0x00, 0x00, 0x83, 0xF8, 0x08, 0x75, 0x3A, 0x90, 0x90, 0x90, 0x90,
+                0x8B, 0x81, 0x00, 0x01, 0x00, 0x00, 0x83, 0xF8, 0x00, 0x74, 0x2B, 0x90, 0x90, 0x90, 0x90, 0x8B,
+                0x81, 0xA8, 0x01, 0x00, 0x00, 0x3D, 0x00, 0x00, 0x80, 0x3F, 0x75, 0x1A, 0x90, 0x90, 0x90, 0x90,
+                0x0F, 0x58, 0x4B, 0x40, 0xEB, 0x10, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+                0x90, 0x90, 0x0F, 0x58, 0x4B, 0x50, 0x5B, 0x58, 0x0F, 0x29, 0x4B, 0x10, 0x0F, 0x28, 0x81, 0xA0,
+                0x01, 0x00, 0x00, 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, 0x59, 0xD3, 0x7F, 0x37, 0xF6, 0x7F, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
             };
 
             byte[] _patchAddressBytes = BitConverter.GetBytes(this._patchAddress);
-            Array.Copy(_patchAddressBytes, 0, patchCode, 0x70, 8);
-            Array.Copy(_patchAddressBytes, 0, patchCode, 0x12D, 8);
+            Array.Copy(_patchAddressBytes, 0, patchCode, 0x80, 8);
+            Array.Copy(_patchAddressBytes, 0, patchCode, 0xDB, 8);
 
             _patchAddressBytes = BitConverter.GetBytes(((long)(this._memEditor.MainModuleAddress + 0x4F1AE1)));
-            Array.Copy(_patchAddressBytes, 0, patchCode, 0xAA, 8);
+            Array.Copy(_patchAddressBytes, 0, patchCode, 0xBA, 8);
             _patchAddressBytes = BitConverter.GetBytes(((long)(this._memEditor.MainModuleAddress + 0x4ED359)));
-            Array.Copy(_patchAddressBytes, 0, patchCode, 0x14C, 8);
+            Array.Copy(_patchAddressBytes, 0, patchCode, 0x169, 8);
 
             this._memEditor.WriteMemory(this._patchAddress, patchCode);
 
@@ -549,7 +614,7 @@ namespace GG2PlayerScale
                 //Basic Jump command
                 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x90, 0x90, 0x90
             };
-            _patchAddressBytes = BitConverter.GetBytes(((long)(this._patchAddress + 0x50)));
+            _patchAddressBytes = BitConverter.GetBytes(((long)(this._patchAddress + 0x60)));
             Array.Copy(_patchAddressBytes, 0, jumpCode, 0x06, 8);
 
             this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + 0x4F1AD0, jumpCode, true);
@@ -560,7 +625,7 @@ namespace GG2PlayerScale
                 //Basic Jump command
                 0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x90, 0x90, 0x90, 0x90
             };
-            _patchAddressBytes = BitConverter.GetBytes(((long)(this._patchAddress + 0xC0)));
+            _patchAddressBytes = BitConverter.GetBytes(((long)(this._patchAddress + 0xD0)));
             Array.Copy(_patchAddressBytes, 0, jumpCode, 0x06, 8);
 
             this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + 0x4ED347, jumpCode, true);
@@ -623,6 +688,8 @@ namespace GG2PlayerScale
             {
                 this._memEditor.WriteFloat(worldScaleOffset + 0x470, worldScale, true);
             };
+
+            this._memEditor.WriteFloat(this._patchAddress + 0x58, this._subtitleOffset);
 
             this.UpdateHeightDisplay();
             this.UpdateScaleDisplay();
@@ -811,7 +878,10 @@ namespace GG2PlayerScale
             this._jsonIni.WriteFloat("ProcessTime", targetTime);
             this._jsonIni.WriteInt  ("ProcessTimeUnit", this.cbTargetTimeUnit.SelectedIndex);
             this._jsonIni.WriteBool ("ProcessHasEndScale", endScale.HasValue);
-            this._jsonIni.WriteFloat("ProcessEndScale", endScale.Value);            
+            if(endScale.HasValue)
+            {
+                this._jsonIni.WriteFloat("ProcessEndScale", endScale.Value);
+            }            
 
             int seconds = (int)Math.Round(targetTime * factor);            
 
