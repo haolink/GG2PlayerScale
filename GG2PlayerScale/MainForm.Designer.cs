@@ -34,6 +34,8 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.txtPlayerScale = new System.Windows.Forms.TextBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.txtSubtitleOffset = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.txtPlayerHeight = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
@@ -50,8 +52,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.txtTargetScale = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
-            this.txtSubtitleOffset = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -121,6 +121,23 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Static parameters";
             // 
+            // txtSubtitleOffset
+            // 
+            this.txtSubtitleOffset.Location = new System.Drawing.Point(155, 45);
+            this.txtSubtitleOffset.Name = "txtSubtitleOffset";
+            this.txtSubtitleOffset.Size = new System.Drawing.Size(292, 20);
+            this.txtSubtitleOffset.TabIndex = 3;
+            this.txtSubtitleOffset.Text = "30";
+            // 
+            // label7
+            // 
+            this.label7.Location = new System.Drawing.Point(9, 45);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(140, 20);
+            this.label7.TabIndex = 2;
+            this.label7.Text = "Subtitle offset:";
+            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // label1
             // 
             this.label1.Location = new System.Drawing.Point(9, 19);
@@ -166,7 +183,7 @@
             this.txtEndScale.Location = new System.Drawing.Point(155, 123);
             this.txtEndScale.Name = "txtEndScale";
             this.txtEndScale.Size = new System.Drawing.Size(292, 20);
-            this.txtEndScale.TabIndex = 16;
+            this.txtEndScale.TabIndex = 6;
             this.txtEndScale.Text = "0.5";
             // 
             // chkEnableEndScale
@@ -174,7 +191,7 @@
             this.chkEnableEndScale.Location = new System.Drawing.Point(9, 122);
             this.chkEnableEndScale.Name = "chkEnableEndScale";
             this.chkEnableEndScale.Size = new System.Drawing.Size(140, 21);
-            this.chkEnableEndScale.TabIndex = 15;
+            this.chkEnableEndScale.TabIndex = 5;
             this.chkEnableEndScale.Text = "until reaching the scale:";
             this.chkEnableEndScale.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.chkEnableEndScale.UseVisualStyleBackColor = true;
@@ -213,7 +230,7 @@
             this.txtCountdown.Location = new System.Drawing.Point(155, 78);
             this.txtCountdown.Name = "txtCountdown";
             this.txtCountdown.Size = new System.Drawing.Size(195, 20);
-            this.txtCountdown.TabIndex = 11;
+            this.txtCountdown.TabIndex = 4;
             this.txtCountdown.Text = "0";
             // 
             // cbTargetTimeUnit
@@ -226,7 +243,7 @@
             this.cbTargetTimeUnit.Location = new System.Drawing.Point(356, 52);
             this.cbTargetTimeUnit.Name = "cbTargetTimeUnit";
             this.cbTargetTimeUnit.Size = new System.Drawing.Size(91, 21);
-            this.cbTargetTimeUnit.TabIndex = 9;
+            this.cbTargetTimeUnit.TabIndex = 3;
             // 
             // btnProcessPause
             // 
@@ -254,7 +271,7 @@
             this.txtTargetTimeValue.Location = new System.Drawing.Point(155, 52);
             this.txtTargetTimeValue.Name = "txtTargetTimeValue";
             this.txtTargetTimeValue.Size = new System.Drawing.Size(195, 20);
-            this.txtTargetTimeValue.TabIndex = 5;
+            this.txtTargetTimeValue.TabIndex = 2;
             this.txtTargetTimeValue.Text = "30";
             // 
             // label3
@@ -271,7 +288,7 @@
             this.txtTargetScale.Location = new System.Drawing.Point(155, 26);
             this.txtTargetScale.Name = "txtTargetScale";
             this.txtTargetScale.Size = new System.Drawing.Size(292, 20);
-            this.txtTargetScale.TabIndex = 3;
+            this.txtTargetScale.TabIndex = 1;
             this.txtTargetScale.Text = "0.5";
             // 
             // label2
@@ -282,23 +299,6 @@
             this.label2.TabIndex = 2;
             this.label2.Text = "Scale by factor";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label7
-            // 
-            this.label7.Location = new System.Drawing.Point(9, 45);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(140, 20);
-            this.label7.TabIndex = 2;
-            this.label7.Text = "Subtitle offset:";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // txtSubtitleOffset
-            // 
-            this.txtSubtitleOffset.Location = new System.Drawing.Point(155, 45);
-            this.txtSubtitleOffset.Name = "txtSubtitleOffset";
-            this.txtSubtitleOffset.Size = new System.Drawing.Size(292, 20);
-            this.txtSubtitleOffset.TabIndex = 3;
-            this.txtSubtitleOffset.Text = "30";
             // 
             // MainForm
             // 
