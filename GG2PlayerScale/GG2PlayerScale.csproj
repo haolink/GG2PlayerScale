@@ -52,6 +52,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyPatchManager.cs" />
+    <Compile Include="Classes\BoyerMoore.cs" />
     <Compile Include="Classes\JSONINIFile.cs" />
     <Compile Include="Classes\OculusTouchWrapper.cs" />
     <Compile Include="Classes\OpenVRWrapper.cs" />
@@ -87,7 +89,9 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="Assembly\patch.bin" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -104,12 +108,17 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ab3d.readme.txt" />
+    <Content Include="Assembly\patch.asm" />
     <Content Include="sweeper.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>cd $(TargetDir)
+    <PostBuildEvent>cd /d "$(TargetDir)"
 del GG2PlayerScale.exe
 IlMerge /v4 /out:GG2PlayerScale.exe GG2PlayerScale_Pre.exe Ab3d.OculusWrap.dll</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>cd /d "$(ProjectDir)\Assembly"
+fasm patch.asm patch.bin</PreBuildEvent>
   </PropertyGroup>
 </Project>
