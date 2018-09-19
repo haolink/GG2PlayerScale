@@ -683,17 +683,17 @@ namespace GG2PlayerScale
                     if(this._scaleResetManager.Enabled)
                     {
                         resetScale = this._scaleResetManager.GetCurrentScale();
+
+                        double timeSinceStart = (DateTime.Now - this._scaleResetManager.StartTime).TotalSeconds;
+                        double factor = Math.Min(RESET_TIME, Math.Max(0, timeSinceStart / RESET_TIME)) / RESET_TIME;
+
+                        if (this._adjustHeight)
+                        {
+                            factor = 1.0 - factor;
+                        }
+
+                        extraOffset = (float)(defaultOffset * (float)resetScale * factor);
                     }
-
-                    double timeSinceStart = (DateTime.Now - this._scaleResetManager.StartTime).TotalSeconds;
-                    double factor = Math.Min(RESET_TIME, Math.Max(0, timeSinceStart / RESET_TIME)) / RESET_TIME;
-
-                    if (this._adjustHeight)
-                    {
-                        factor = 1.0 - factor;
-                    }
-
-                    extraOffset = (float)((normalHeight * ((float)resetScale - currentScale) + defaultOffset * (float)resetScale) * factor);
 
                     offset = normalHeight * (resetScale - (float)currentScale) + extraOffset;
 
@@ -710,7 +710,7 @@ namespace GG2PlayerScale
                 {
                     offset = defaultOffset * (float)scale;
                 }
-            }            
+            }
 
             this._memEditor.WriteFloat(this._patchAddress + this._patchManager.CurrentCameraOffset, offset);
 
