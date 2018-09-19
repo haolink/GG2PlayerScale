@@ -52,10 +52,14 @@
             this.label3 = new System.Windows.Forms.Label();
             this.txtTargetScale = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.gbScaleReset = new System.Windows.Forms.GroupBox();
+            this.chkResetWorldScale = new System.Windows.Forms.CheckBox();
+            this.chkResetScaleGradually = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.gbScaleReset.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -170,7 +174,7 @@
             this.groupBox3.Controls.Add(this.label3);
             this.groupBox3.Controls.Add(this.txtTargetScale);
             this.groupBox3.Controls.Add(this.label2);
-            this.groupBox3.Location = new System.Drawing.Point(12, 232);
+            this.groupBox3.Location = new System.Drawing.Point(12, 310);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(453, 207);
             this.groupBox3.TabIndex = 3;
@@ -300,11 +304,46 @@
             this.label2.Text = "Scale by factor";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // gbScaleReset
+            // 
+            this.gbScaleReset.Controls.Add(this.chkResetScaleGradually);
+            this.gbScaleReset.Controls.Add(this.chkResetWorldScale);
+            this.gbScaleReset.Location = new System.Drawing.Point(12, 232);
+            this.gbScaleReset.Name = "gbScaleReset";
+            this.gbScaleReset.Size = new System.Drawing.Size(453, 72);
+            this.gbScaleReset.TabIndex = 4;
+            this.gbScaleReset.TabStop = false;
+            this.gbScaleReset.Text = "Scale reset settings";
+            // 
+            // chkResetWorldScale
+            // 
+            this.chkResetWorldScale.Checked = true;
+            this.chkResetWorldScale.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkResetWorldScale.Location = new System.Drawing.Point(12, 19);
+            this.chkResetWorldScale.Name = "chkResetWorldScale";
+            this.chkResetWorldScale.Size = new System.Drawing.Size(435, 21);
+            this.chkResetWorldScale.TabIndex = 6;
+            this.chkResetWorldScale.Text = "Reset world scale while scale reset is active";
+            this.chkResetWorldScale.UseVisualStyleBackColor = true;
+            this.chkResetWorldScale.CheckedChanged += new System.EventHandler(this.SaveCheckImmediate);
+            // 
+            // chkResetScaleGradually
+            // 
+            this.chkResetScaleGradually.Checked = true;
+            this.chkResetScaleGradually.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkResetScaleGradually.Location = new System.Drawing.Point(12, 45);
+            this.chkResetScaleGradually.Name = "chkResetScaleGradually";
+            this.chkResetScaleGradually.Size = new System.Drawing.Size(435, 21);
+            this.chkResetScaleGradually.TabIndex = 7;
+            this.chkResetScaleGradually.Text = "Adjust scale gradually (0.5 seconds)";
+            this.chkResetScaleGradually.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(477, 444);
+            this.ClientSize = new System.Drawing.Size(477, 545);
+            this.Controls.Add(this.gbScaleReset);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox2);
@@ -322,6 +361,7 @@
             this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            this.gbScaleReset.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -352,6 +392,9 @@
         private System.Windows.Forms.TextBox txtCountdown;
         private System.Windows.Forms.TextBox txtSubtitleOffset;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.GroupBox gbScaleReset;
+        private System.Windows.Forms.CheckBox chkResetWorldScale;
+        private System.Windows.Forms.CheckBox chkResetScaleGradually;
     }
 }
 

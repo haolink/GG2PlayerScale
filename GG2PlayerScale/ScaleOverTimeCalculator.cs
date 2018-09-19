@@ -110,7 +110,7 @@ namespace GG2PlayerScale
         /// <param name="baseSeconds">Seconds required to reach target</param>
         /// <param name="countdown">Countdown until scaling starts.</param>
         /// <param name="targetScale">Target scale when to end the progress.</param>
-        public void StartProcess(float startScale, float baseScale, int baseSeconds, int countdown, float? targetScale)
+        public void StartProcess(float startScale, float baseScale, double baseSeconds, int countdown, float? targetScale)
         {
             if (this._enabled)
             {
@@ -118,7 +118,7 @@ namespace GG2PlayerScale
             }
 
             this._startScale = startScale;
-            this._base = Math.Pow(baseScale, (1.0 / (double)baseSeconds));
+            this._base = Math.Pow(baseScale, (1.0 / baseSeconds));
             this._lastSecondDisplay = -1;
 
             DateTime startTime = DateTime.Now + new TimeSpan(0, 0, countdown);

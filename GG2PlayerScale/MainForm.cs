@@ -53,6 +53,11 @@ namespace GG2PlayerScale
         private ScaleOverTimeCalculator _scaleCalculator;
 
         /// <summary>
+        /// Resets the scale over time.
+        /// </summary>
+        private ScaleOverTimeCalculator _scaleResetManager;
+
+        /// <summary>
         /// Default player height.
         /// </summary>
         public const float DEFAULT_HEIGHT = 164.0f;
@@ -71,6 +76,11 @@ namespace GG2PlayerScale
         /// Assembly Manager.
         /// </summary>
         private AssemblyPatchManager _patchManager;
+
+        /// <summary>
+        /// Is VR available?
+        /// </summary>
+        private bool _vrAvailable;
 
         public MainForm()
         {
@@ -107,14 +117,19 @@ namespace GG2PlayerScale
             this.chkEnableEndScale.Checked = this._jsonIni.ReadBool("ProcessHasEndScale", null, false);
             this.txtEndScale.Text = this._jsonIni.ReadFloat("ProcessEndScale", null, 0.1).ToString(CultureInfo.InvariantCulture);
 
+            this.chkResetScaleGradually.Checked = this._jsonIni.ReadBool("ResetGradually", null, true);
+            this.chkResetWorldScale.Checked = this._jsonIni.ReadBool("ResetWorldScale", null, true);
+
             this.chkEnableEndScale_CheckedChanged(null, new EventArgs());
 
             try
             {
                 _oculusWrapper = new OculusTouchWrapper();
+                this._vrAvailable = true;
             } catch(Exception ex)
             {
                 _oculusWrapper = null;
+                this._vrAvailable = false;
             }
 
             if(this._oculusWrapper == null)
@@ -122,12 +137,26 @@ namespace GG2PlayerScale
                 try
                 {
                     this._openVRWrapper = new OpenVRWrapper();
+                    this._vrAvailable = true;
                 }
                 catch(Exception ex)
                 {
                     this._openVRWrapper = null;
+                    this._vrAvailable = false;
                 }
             }
+
+            if(this._oculusWrapper != null)
+            {
+                this.gbScaleReset.Text += " (Hold B or Y to activate)";
+            }
+            else if(this._openVRWrapper != null)
+            {
+                this.gbScaleReset.Text += " (Hold both triggers to activate)";
+            }
+
+            this.chkResetWorldScale.Enabled = this._vrAvailable;
+            this.chkResetScaleGradually.Enabled = this._vrAvailable;
 
             this._frmCurrentHeight = new FrmCurrentHeight();
 
@@ -135,9 +164,11 @@ namespace GG2PlayerScale
             this._scaleCalculator = new ScaleOverTimeCalculator(this._frmCurrentHeight.lblMultiplicationTime);
             this._scaleCalculator.Completed += ScaleProgessCompleted;
 
+            this._scaleResetManager = new ScaleOverTimeCalculator(null);
+
             _threadEnd = false;
             _hasBeenCapturing = false;
-            _playerScale = 1.0f;
+            _playerScale = 1.0f;            
             _memEditor = new MemEditor64("GalGun2-Win64-Shipping.exe");
 
             this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
@@ -253,6 +284,7 @@ namespace GG2PlayerScale
         /// </summary>
         private void LoopMain()
         {
+            bool wasAdjusting = this._adjustHeight;
 
             this._adjustHeight = false;
             if (this._oculusWrapper != null)
@@ -310,6 +342,23 @@ namespace GG2PlayerScale
             this.ReadPlayerScale();
             this.ReadPlayerHeight();
             this.ReadSubtitleOffset();
+
+            if (this.chkResetScaleGradually.Checked)
+            {
+                if (this._adjustHeight && !wasAdjusting)
+                {
+                    this._scaleResetManager.StartProcess(this._playerScale, (float)(1.0 / this._playerScale), 0.5, 0, 1.0f);
+                }
+                else if (!this._adjustHeight && wasAdjusting)
+                {
+                    float sScale = 1.0f;
+                    if (this._scaleResetManager.Enabled)
+                    {
+                        sScale = this._scaleResetManager.GetCurrentScale();
+                    }
+                    this._scaleResetManager.StartProcess(sScale, this._playerScale / sScale, 0.5, 0, this._playerScale);
+                }
+            }
 
             if (_memEditor.Connect())
             {
@@ -447,6 +496,11 @@ namespace GG2PlayerScale
         /// <param name="text"></param>
         public static void WriteLabelThreadSafe(Label label, string text)
         {
+            if(label == null)
+            {
+                return;
+            }
+
             if(label.InvokeRequired)
             {
                 try
@@ -612,10 +666,20 @@ namespace GG2PlayerScale
             {
                 float defaultOffset = (this._playerHeight - DEFAULT_HEIGHT) * normalHeight / DEFAULT_HEIGHT;
 
-                if (this._adjustHeight)
+                if (this._adjustHeight || this._scaleResetManager.Enabled)
                 {
-                    offset = normalHeight * (1.0f - (float)currentScale);
-                    worldScale = 100.0f;
+                    float resetScale = 1.0f;
+                    if(this._scaleResetManager.Enabled)
+                    {
+                        resetScale = this._scaleResetManager.GetCurrentScale();
+                    }
+
+                    offset = normalHeight * (resetScale - (float)currentScale);
+
+                    if(this.chkResetWorldScale.Checked)
+                    {
+                        worldScale = resetScale * 100.0f;
+                    }                    
                 }
                 else if (Math.Abs(1 - scale / currentScale) > 0.001)
                 {
@@ -863,6 +927,8 @@ namespace GG2PlayerScale
             this.txtEndScale.Enabled = enableDefaultFields && this.chkEnableEndScale.Checked;
             this.txtCountdown.Enabled = enableDefaultFields;
             this.btnProcessPause.Enabled = !enableDefaultFields;
+            this.chkResetWorldScale.Enabled = enableDefaultFields && this._vrAvailable;
+            this.chkResetScaleGradually.Enabled = enableDefaultFields && this._vrAvailable;
         }
 
         /// <summary>
@@ -980,6 +1046,12 @@ namespace GG2PlayerScale
             MainForm.WriteButtonLabelThreadSafe(this.btnProcessStart, "Start process");
 
             this.ResetFields(true);
+        }
+
+        private void SaveCheckImmediate(object sender, EventArgs e)
+        {
+            this._jsonIni.WriteBool("ResetGradually", this.chkResetScaleGradually.Checked, null);
+            this._jsonIni.WriteBool("ResetWorldScale", this.chkResetWorldScale.Checked, null);
         }
     }
 }
