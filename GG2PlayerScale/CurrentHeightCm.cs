@@ -32,7 +32,10 @@ namespace GG2PlayerScale
 
         private void CurrentHeightCm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = this.MustNotClose;
+            if (e.CloseReason.Equals(CloseReason.UserClosing))
+            {
+                e.Cancel = this.MustNotClose;
+            }
         }
     }
 }

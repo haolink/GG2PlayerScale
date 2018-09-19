@@ -46,6 +46,11 @@ namespace GG2PlayerScale
         private DateTime _startTime;
 
         /// <summary>
+        /// Start time.
+        /// </summary>
+        public DateTime StartTime { get { return _startTime;  } }
+
+        /// <summary>
         /// Pause start.
         /// </summary>
         private DateTime _pauseStart;
@@ -86,6 +91,11 @@ namespace GG2PlayerScale
         private float _lastScale;
 
         /// <summary>
+        /// Forced runtime length.
+        /// </summary>
+        private double? _forceRunTime;
+
+        /// <summary>
         /// Event on completed progess.
         /// </summary>
         public event EventHandler<EventArgs> Completed;
@@ -110,7 +120,8 @@ namespace GG2PlayerScale
         /// <param name="baseSeconds">Seconds required to reach target</param>
         /// <param name="countdown">Countdown until scaling starts.</param>
         /// <param name="targetScale">Target scale when to end the progress.</param>
-        public void StartProcess(float startScale, float baseScale, double baseSeconds, int countdown, float? targetScale)
+        /// <param name="forceRunTime">Force how long the process has to be active.</param>
+        public void StartProcess(float startScale, float baseScale, double baseSeconds, int countdown, float? targetScale, double? forceRunTime = null)
         {
             if (this._enabled)
             {
@@ -125,6 +136,8 @@ namespace GG2PlayerScale
 
             this._startTime = startTime;
             this._targetScale = targetScale;
+
+            this._forceRunTime = forceRunTime;
 
             this._paused = false;
             this._enabled = true;                
@@ -234,11 +247,14 @@ namespace GG2PlayerScale
 
             if(this._targetScale != null)
             {
-                if( (this._lastScale < this._targetScale && this._base < 1) || 
-                    (this._lastScale > this._targetScale && this._base > 1))
+                if( (this._lastScale <= this._targetScale && this._base <= 1) || 
+                    (this._lastScale >= this._targetScale && this._base >= 1))
                 {
                     this._lastScale = this._targetScale.Value;
-                    this.StopProcessInternally();
+                    if (this._forceRunTime == null || (secondsFloat >= this._forceRunTime.Value))
+                    {
+                        this.StopProcessInternally();
+                    }
                 }                
             }
 

@@ -63,6 +63,11 @@ namespace GG2PlayerScale
         public const float DEFAULT_HEIGHT = 164.0f;
 
         /// <summary>
+        /// Reset time.
+        /// </summary>
+        public const double RESET_TIME = 0.2;
+
+        /// <summary>
         /// Is paused?
         /// </summary>
         private bool _paused;
@@ -152,7 +157,7 @@ namespace GG2PlayerScale
             }
             else if(this._openVRWrapper != null)
             {
-                this.gbScaleReset.Text += " (Hold both triggers to activate)";
+                this.gbScaleReset.Text += " (Hold both grips to activate)";
             }
 
             this.chkResetWorldScale.Enabled = this._vrAvailable;
@@ -269,8 +274,8 @@ namespace GG2PlayerScale
 
                 TimeSpan neededTime = DateTime.Now - dt;
 
-                //Target frame rate 45 FPS - thus: 22.2 ms
-                double ms = 22.2 - neededTime.TotalMilliseconds;
+                //Target frame rate 90 FPS - thus: 22.2 ms
+                double ms = 11.1 - neededTime.TotalMilliseconds;
                 ms = Math.Max(5.0, ms); //Wait at least 5 ms
                 int msInt = (int)Math.Floor(ms);
                 Thread.Sleep(msInt);
@@ -347,7 +352,11 @@ namespace GG2PlayerScale
             {
                 if (this._adjustHeight && !wasAdjusting)
                 {
-                    this._scaleResetManager.StartProcess(this._playerScale, (float)(1.0 / this._playerScale), 0.5, 0, 1.0f);
+                    if (this._scaleResetManager.Enabled)
+                    {
+                        this._scaleResetManager.StopProcess();
+                    }
+                    this._scaleResetManager.StartProcess(this._playerScale, (float)(1.0 / this._playerScale), RESET_TIME, 0, 1.0f, RESET_TIME);
                 }
                 else if (!this._adjustHeight && wasAdjusting)
                 {
@@ -355,8 +364,9 @@ namespace GG2PlayerScale
                     if (this._scaleResetManager.Enabled)
                     {
                         sScale = this._scaleResetManager.GetCurrentScale();
+                        this._scaleResetManager.StopProcess();
                     }
-                    this._scaleResetManager.StartProcess(sScale, this._playerScale / sScale, 0.5, 0, this._playerScale);
+                    this._scaleResetManager.StartProcess(sScale, this._playerScale / sScale, RESET_TIME, 0, this._playerScale, RESET_TIME);
                 }
             }
 
@@ -669,17 +679,28 @@ namespace GG2PlayerScale
                 if (this._adjustHeight || this._scaleResetManager.Enabled)
                 {
                     float resetScale = 1.0f;
+                    float extraOffset = 0.0f;
                     if(this._scaleResetManager.Enabled)
                     {
                         resetScale = this._scaleResetManager.GetCurrentScale();
                     }
 
-                    offset = normalHeight * (resetScale - (float)currentScale);
+                    double timeSinceStart = (DateTime.Now - this._scaleResetManager.StartTime).TotalSeconds;
+                    double factor = Math.Min(RESET_TIME, Math.Max(0, timeSinceStart / RESET_TIME)) / RESET_TIME;
+
+                    if (this._adjustHeight)
+                    {
+                        factor = 1.0 - factor;
+                    }
+
+                    extraOffset = (float)((normalHeight * ((float)resetScale - currentScale) + defaultOffset * (float)resetScale) * factor);
+
+                    offset = normalHeight * (resetScale - (float)currentScale) + extraOffset;
 
                     if(this.chkResetWorldScale.Checked)
                     {
                         worldScale = resetScale * 100.0f;
-                    }                    
+                    }
                 }
                 else if (Math.Abs(1 - scale / currentScale) > 0.001)
                 {

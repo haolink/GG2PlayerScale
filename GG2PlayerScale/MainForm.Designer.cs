@@ -53,8 +53,8 @@
             this.txtTargetScale = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.gbScaleReset = new System.Windows.Forms.GroupBox();
-            this.chkResetWorldScale = new System.Windows.Forms.CheckBox();
             this.chkResetScaleGradually = new System.Windows.Forms.CheckBox();
+            this.chkResetWorldScale = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -177,7 +177,7 @@
             this.groupBox3.Location = new System.Drawing.Point(12, 310);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(453, 207);
-            this.groupBox3.TabIndex = 3;
+            this.groupBox3.TabIndex = 4;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Gradual scale change over time";
             // 
@@ -311,9 +311,20 @@
             this.gbScaleReset.Location = new System.Drawing.Point(12, 232);
             this.gbScaleReset.Name = "gbScaleReset";
             this.gbScaleReset.Size = new System.Drawing.Size(453, 72);
-            this.gbScaleReset.TabIndex = 4;
+            this.gbScaleReset.TabIndex = 3;
             this.gbScaleReset.TabStop = false;
             this.gbScaleReset.Text = "Scale reset settings";
+            // 
+            // chkResetScaleGradually
+            // 
+            this.chkResetScaleGradually.Checked = true;
+            this.chkResetScaleGradually.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkResetScaleGradually.Location = new System.Drawing.Point(12, 45);
+            this.chkResetScaleGradually.Name = "chkResetScaleGradually";
+            this.chkResetScaleGradually.Size = new System.Drawing.Size(435, 21);
+            this.chkResetScaleGradually.TabIndex = 7;
+            this.chkResetScaleGradually.Text = "Adjust scale gradually (within 0.2 seconds)";
+            this.chkResetScaleGradually.UseVisualStyleBackColor = true;
             // 
             // chkResetWorldScale
             // 
@@ -326,17 +337,6 @@
             this.chkResetWorldScale.Text = "Reset world scale while scale reset is active";
             this.chkResetWorldScale.UseVisualStyleBackColor = true;
             this.chkResetWorldScale.CheckedChanged += new System.EventHandler(this.SaveCheckImmediate);
-            // 
-            // chkResetScaleGradually
-            // 
-            this.chkResetScaleGradually.Checked = true;
-            this.chkResetScaleGradually.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkResetScaleGradually.Location = new System.Drawing.Point(12, 45);
-            this.chkResetScaleGradually.Name = "chkResetScaleGradually";
-            this.chkResetScaleGradually.Size = new System.Drawing.Size(435, 21);
-            this.chkResetScaleGradually.TabIndex = 7;
-            this.chkResetScaleGradually.Text = "Adjust scale gradually (0.5 seconds)";
-            this.chkResetScaleGradually.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
