@@ -54,6 +54,10 @@ camscale_assembly_codebegin:
    mov eax,[rbx]
    mov [rbx+28h],eax
    mov eax,[rcx+00000164h]
+   cmp eax,0x41a00000
+   jg camscale_accept_eax ;TODO: Better concept here!
+   mov eax,0x43160000
+camscale_accept_eax:
    mov [rbx+04h],eax
    mov [rbx+38h],eax
    movaps xmm0,[rbx+10h]
@@ -93,22 +97,19 @@ camscale_live_assembly_codebegin:
    jne livecamscale_skip
    mov eax,[rcx+0018h]
    cmp eax,00000065h
-   je livecamsubtitle_adjust ;This is the case when the UI overlay renderer was accidentially caught
-   mov eax,[rcx+0118h]
-   cmp eax,00000008h
-   jne livecamscale_skip
-   mov eax,[rcx+0100h]
-   cmp eax,00000000h
    je livecamscale_skip
+   mov eax,[rcx+0118h]
+   cmp eax,00000007h
+   jne livecamscale_skip
+   ;mov eax,[rcx+0100h]
+   ;cmp eax,00000000h
+   ;je livecamscale_skip
    mov eax,[rcx+01A8h]	
    cmp eax,3F800000h
    jne livecamscale_skip
 
 livecamscale_adjust:
    addps xmm1,[rbx+0040h]
-   jmp livecamscale_skip
-livecamsubtitle_adjust:
-   addps xmm1,[rbx+0050h]
 livecamscale_skip:
    pop rbx
    pop rax

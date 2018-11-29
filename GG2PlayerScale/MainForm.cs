@@ -120,7 +120,7 @@ namespace GG2PlayerScale
             {
                 this._subtitleOffset = 30.0f;
             }
-            this.txtSubtitleOffset.Text = this._subtitleOffset.ToString(CultureInfo.InvariantCulture);
+            //this.txtSubtitleOffset.Text = this._subtitleOffset.ToString(CultureInfo.InvariantCulture);
 
             this.txtTargetScale.Text = this._jsonIni.ReadFloat("ProcessSpeed", null, 0.5).ToString(CultureInfo.InvariantCulture);
             this.txtTargetTimeValue.Text = this._jsonIni.ReadFloat("ProcessTime", null, 30).ToString(CultureInfo.InvariantCulture);
@@ -494,7 +494,7 @@ namespace GG2PlayerScale
         private void ReadSubtitleOffset()
         {
             float newOffset = this._subtitleOffset;
-            if (float.TryParse(txtSubtitleOffset.Text.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out newOffset))
+            /*if (float.TryParse(txtSubtitleOffset.Text.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out newOffset))
             {
                 if (newOffset != this._subtitleOffset && newOffset >= -20 && newOffset <= 100)
                 {
@@ -502,7 +502,7 @@ namespace GG2PlayerScale
                     this._jsonIni.WriteFloat("SubtitleOffset", this._subtitleOffset);
                     //this._jsonIni.SaveData();
                 }
-            }
+            }*/
         }
 
         /// <summary>

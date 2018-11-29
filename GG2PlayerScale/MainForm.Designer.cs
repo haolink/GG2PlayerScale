@@ -34,8 +34,6 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.txtPlayerScale = new System.Windows.Forms.TextBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.txtSubtitleOffset = new System.Windows.Forms.TextBox();
-            this.label7 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.txtPlayerHeight = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
@@ -97,7 +95,7 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.txtPlayerScale);
-            this.groupBox2.Location = new System.Drawing.Point(12, 173);
+            this.groupBox2.Location = new System.Drawing.Point(12, 147);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(453, 53);
             this.groupBox2.TabIndex = 2;
@@ -114,33 +112,14 @@
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.txtSubtitleOffset);
-            this.groupBox4.Controls.Add(this.label7);
             this.groupBox4.Controls.Add(this.label1);
             this.groupBox4.Controls.Add(this.txtPlayerHeight);
             this.groupBox4.Location = new System.Drawing.Point(12, 95);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(453, 72);
+            this.groupBox4.Size = new System.Drawing.Size(453, 46);
             this.groupBox4.TabIndex = 1;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Static parameters";
-            // 
-            // txtSubtitleOffset
-            // 
-            this.txtSubtitleOffset.Location = new System.Drawing.Point(155, 45);
-            this.txtSubtitleOffset.Name = "txtSubtitleOffset";
-            this.txtSubtitleOffset.Size = new System.Drawing.Size(292, 20);
-            this.txtSubtitleOffset.TabIndex = 3;
-            this.txtSubtitleOffset.Text = "30";
-            // 
-            // label7
-            // 
-            this.label7.Location = new System.Drawing.Point(9, 45);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(140, 20);
-            this.label7.TabIndex = 2;
-            this.label7.Text = "Subtitle offset:";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // label1
             // 
@@ -174,7 +153,7 @@
             this.groupBox3.Controls.Add(this.label3);
             this.groupBox3.Controls.Add(this.txtTargetScale);
             this.groupBox3.Controls.Add(this.label2);
-            this.groupBox3.Location = new System.Drawing.Point(12, 310);
+            this.groupBox3.Location = new System.Drawing.Point(12, 284);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(453, 207);
             this.groupBox3.TabIndex = 4;
@@ -308,7 +287,7 @@
             // 
             this.gbScaleReset.Controls.Add(this.chkResetScaleGradually);
             this.gbScaleReset.Controls.Add(this.chkResetWorldScale);
-            this.gbScaleReset.Location = new System.Drawing.Point(12, 232);
+            this.gbScaleReset.Location = new System.Drawing.Point(12, 206);
             this.gbScaleReset.Name = "gbScaleReset";
             this.gbScaleReset.Size = new System.Drawing.Size(453, 72);
             this.gbScaleReset.TabIndex = 3;
@@ -342,7 +321,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(477, 545);
+            this.ClientSize = new System.Drawing.Size(477, 501);
             this.Controls.Add(this.gbScaleReset);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox4);
@@ -390,8 +369,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox txtCountdown;
-        private System.Windows.Forms.TextBox txtSubtitleOffset;
-        private System.Windows.Forms.Label label7;
         private System.Windows.Forms.GroupBox gbScaleReset;
         private System.Windows.Forms.CheckBox chkResetWorldScale;
         private System.Windows.Forms.CheckBox chkResetScaleGradually;
