@@ -27,6 +27,12 @@ namespace GG2PlayerScale
 {
     public partial class MainForm : Form
     {
+        const long PATCH_JUMPIN_OFFSET1 = 0x4F12F0; //4F1AD0
+        const long PATCH_JUMPOUT_OFFSET1 = 0x4F1301; //4F1301
+
+        const long PATCH_JUMPIN_OFFSET2 = 0x4ECBF7; //4ED347
+        const long PATCH_JUMPOUT_OFFSET2 = 0x4ECC09; //4ED359
+
         /// <summary>
         /// Oculus wrapper to access touch controller settings.
         /// </summary>
@@ -613,9 +619,9 @@ namespace GG2PlayerScale
             Array.Copy(_patchAddressBytes, 0, patchCode, this._patchManager.BaseAddressOffsets[0], 8);
             Array.Copy(_patchAddressBytes, 0, patchCode, this._patchManager.BaseAddressOffsets[1], 8);
 
-            _patchAddressBytes = BitConverter.GetBytes(((long)(this._memEditor.MainModuleAddress + 0x4F1AE1)));
+            _patchAddressBytes = BitConverter.GetBytes(((long)(this._memEditor.MainModuleAddress + PATCH_JUMPOUT_OFFSET1)));
             Array.Copy(_patchAddressBytes, 0, patchCode, this._patchManager.Patch1LeavingOffset, 8);
-            _patchAddressBytes = BitConverter.GetBytes(((long)(this._memEditor.MainModuleAddress + 0x4ED359)));
+            _patchAddressBytes = BitConverter.GetBytes(((long)(this._memEditor.MainModuleAddress + PATCH_JUMPOUT_OFFSET2)));
             Array.Copy(_patchAddressBytes, 0, patchCode, this._patchManager.Patch2LeavingOffset, 8);
 
             this._memEditor.WriteMemory(this._patchAddress, patchCode);
@@ -632,7 +638,7 @@ namespace GG2PlayerScale
             _patchAddressBytes = BitConverter.GetBytes(((long)(this._patchAddress + this._patchManager.Patch1EntryOffset)));
             Array.Copy(_patchAddressBytes, 0, jumpCode, 0x06, 8);
 
-            this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + 0x4F1AD0, jumpCode, true);
+            this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + PATCH_JUMPIN_OFFSET1, jumpCode, true);
 
             //Second patch
             jumpCode = new byte[]
@@ -643,7 +649,7 @@ namespace GG2PlayerScale
             _patchAddressBytes = BitConverter.GetBytes(((long)(this._patchAddress + this._patchManager.Patch2EntryOffset)));
             Array.Copy(_patchAddressBytes, 0, jumpCode, 0x06, 8);
 
-            this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + 0x4ED347, jumpCode, true);
+            this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + PATCH_JUMPIN_OFFSET2, jumpCode, true);
 
             this._isPatched = true;
         }
@@ -674,7 +680,7 @@ namespace GG2PlayerScale
 
             if(_memEditor.ReadFloat(this._patchAddress + this._patchManager.DefaultSceneHeightOffset, out normalHeight))
             {
-                float defaultOffset = (this._playerHeight - DEFAULT_HEIGHT) * normalHeight / DEFAULT_HEIGHT;
+                float defaultOffset = 0.0f; //(this._playerHeight - DEFAULT_HEIGHT) * normalHeight / DEFAULT_HEIGHT;
 
                 if (this._adjustHeight || this._scaleResetManager.Enabled)
                 {
@@ -716,16 +722,22 @@ namespace GG2PlayerScale
 
             long worldScaleOffset = 0;
 
+            /*original = new long[]
+            {
+                this._memEditor.MainModuleAddress + 0x02A39720,
+                    0x30, 0x388, 0x20, 0x300 
+            }*/
+
             if (this._memEditor.ResolvePointer(new long[]
                 {
-                    this._memEditor.MainModuleAddress + 0x02A39720,
+                    this._memEditor.MainModuleAddress + 0x02A3A8A0,
                     0x30, 0x388, 0x20, 0x300
                 }, out worldScaleOffset))
             {
                 this._memEditor.WriteFloat(worldScaleOffset + 0x470, worldScale, true);
             };
 
-            this._memEditor.WriteFloat(this._patchAddress + this._patchManager.SubtitleOffset, this._subtitleOffset);
+            //this._memEditor.WriteFloat(this._patchAddress + this._patchManager.SubtitleOffset, this._subtitleOffset);
 
             this.UpdateHeightDisplay();
             this.UpdateScaleDisplay();
@@ -823,13 +835,13 @@ namespace GG2PlayerScale
                 0x0F, 0x28, 0x89, 0x90, 0x01, 0x00, 0x00, 0x48, 0x8B, 0xC2, 0x0F, 0x28, 0xC1, 0xF3, 0x0F, 0x11, 0x0A
             };            
 
-            this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + 0x4F1AD0, originalCode, true);
+            this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + PATCH_JUMPIN_OFFSET1, originalCode, true);
 
             byte[] originalCode2 = new byte[]
             {
                 0x0F, 0x28, 0x89, 0x90, 0x01, 0x00, 0x00, 0x0F, 0x29, 0x4B, 0x10, 0x0F, 0x28, 0x81, 0xA0, 0x01, 0x00, 0x00
             };
-            this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + 0x4ED347, originalCode2, true);
+            this._memEditor.WriteMemory(this._memEditor.MainModuleAddress + PATCH_JUMPIN_OFFSET2, originalCode2, true);
 
             this._isPatched = false;
         }
