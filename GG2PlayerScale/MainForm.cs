@@ -680,7 +680,7 @@ namespace GG2PlayerScale
 
             if(_memEditor.ReadFloat(this._patchAddress + this._patchManager.DefaultSceneHeightOffset, out normalHeight))
             {
-                float defaultOffset = 0.0f; //(this._playerHeight - DEFAULT_HEIGHT) * normalHeight / DEFAULT_HEIGHT;
+                float defaultOffset = (this._playerHeight - DEFAULT_HEIGHT) * normalHeight / DEFAULT_HEIGHT;
 
                 if (this._adjustHeight || this._scaleResetManager.Enabled)
                 {

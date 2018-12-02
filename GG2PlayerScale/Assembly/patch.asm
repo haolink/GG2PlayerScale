@@ -54,9 +54,15 @@ camscale_assembly_codebegin:
    mov eax,[rbx]
    mov [rbx+28h],eax
    mov eax,[rcx+00000164h]
+
+;Sanity check on the height
    cmp eax,0x41a00000
-   jg camscale_accept_eax ;TODO: Better concept here!
-   mov eax,0x43160000
+   jg camscale_accept_eax
+   mov eax,[rbx+04h] ;Check if the old value is still looking good
+   cmp eax,0x40000000
+   jg camscale_accept_eax
+   mov eax,0x43160000 ;Don't have a good value, so I'll just use this one
+;Sanity check is done
 camscale_accept_eax:
    mov [rbx+04h],eax
    mov [rbx+38h],eax
