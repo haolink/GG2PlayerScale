@@ -352,29 +352,7 @@ namespace GG2PlayerScale
 
             this.ReadPlayerScale();
             this.ReadPlayerHeight();
-            this.ReadSubtitleOffset();
-
-            if (this.chkResetScaleGradually.Checked)
-            {
-                if (this._adjustHeight && !wasAdjusting)
-                {
-                    if (this._scaleResetManager.Enabled)
-                    {
-                        this._scaleResetManager.StopProcess();
-                    }
-                    this._scaleResetManager.StartProcess(this._playerScale, (float)(1.0 / this._playerScale), RESET_TIME, 0, 1.0f, RESET_TIME);
-                }
-                else if (!this._adjustHeight && wasAdjusting)
-                {
-                    float sScale = 1.0f;
-                    if (this._scaleResetManager.Enabled)
-                    {
-                        sScale = this._scaleResetManager.GetCurrentScale();
-                        this._scaleResetManager.StopProcess();
-                    }
-                    this._scaleResetManager.StartProcess(sScale, this._playerScale / sScale, RESET_TIME, 0, this._playerScale, RESET_TIME);
-                }
-            }
+            this.ReadSubtitleOffset();            
 
             if (_memEditor.Connect())
             {
@@ -383,6 +361,28 @@ namespace GG2PlayerScale
                     this.PatchMemory();
 
                     this.ResumeProcessManager();
+                }
+
+                if (this.chkResetScaleGradually.Checked)
+                {
+                    if (this._adjustHeight && !wasAdjusting)
+                    {
+                        if (this._scaleResetManager.Enabled)
+                        {
+                            this._scaleResetManager.StopProcess();
+                        }
+                        this._scaleResetManager.StartProcess(this._playerScale, (float)(1.0 / this._playerScale), RESET_TIME, 0, 1.0f, RESET_TIME);
+                    }
+                    else if (!this._adjustHeight && wasAdjusting)
+                    {
+                        float sScale = 1.0f;
+                        if (this._scaleResetManager.Enabled)
+                        {
+                            sScale = this._scaleResetManager.GetCurrentScale();
+                            this._scaleResetManager.StopProcess();
+                        }
+                        this._scaleResetManager.StartProcess(sScale, this._playerScale / sScale, RESET_TIME, 0, this._playerScale, RESET_TIME);
+                    }
                 }
 
                 this.UpdateScale();

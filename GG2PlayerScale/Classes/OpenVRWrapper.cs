@@ -37,7 +37,7 @@ namespace GG2PlayerScale
             try
             {
                 EVRInitError eie = new EVRInitError();
-                system = OpenVR.Init(ref eie, EVRApplicationType.VRApplication_Background);    
+                system = OpenVR.Init(ref eie, EVRApplicationType.VRApplication_Background);
             }
             catch (Exception ex)
             {
