@@ -133,7 +133,9 @@ namespace GG2PlayerScale
 
             this.chkEnableEndScale_CheckedChanged(null, new EventArgs());
 
-            try
+            this._oculusWrapper = null;
+
+            /*try
             {
                 _oculusWrapper = new OculusTouchWrapper();
                 this._vrAvailable = true;
@@ -141,7 +143,7 @@ namespace GG2PlayerScale
             {
                 _oculusWrapper = null;
                 this._vrAvailable = false;
-            }
+            }*/
 
             if(this._oculusWrapper == null)
             {
@@ -152,6 +154,7 @@ namespace GG2PlayerScale
                 }
                 catch(Exception ex)
                 {
+                    //MessageBox.Show("Err 3: " + ex.Message);
                     this._openVRWrapper = null;
                     this._vrAvailable = false;
                 }
@@ -163,7 +166,7 @@ namespace GG2PlayerScale
             }
             else if(this._openVRWrapper != null)
             {
-                this.gbScaleReset.Text += " (Hold both grips to activate)";
+                this.gbScaleReset.Text += " (Hold both grips at the same time to activate)";
             }
 
             this.chkResetWorldScale.Enabled = this._vrAvailable;
@@ -332,9 +335,13 @@ namespace GG2PlayerScale
                         VRControllerState_t rightHand = rightHandN.Value;
                         ulong buttonsLeft = leftHand.ulButtonPressed;
                         ulong buttonsRight = rightHand.ulButtonPressed;
+                        
+                        //Grip button: 1 << k_EButton_Grip = 4
 
-                        if(((buttonsLeft  & (1L << ((int)(EVRButtonId.k_EButton_Grip)))) != 0) &&
-                           ((buttonsRight & (1L << ((int)(EVRButtonId.k_EButton_Grip)))) != 0)) {
+                        ulong buttonStateLeft = (buttonsLeft & (ulong)4);
+                        ulong buttonStateRight = (buttonsRight & (ulong)4);
+
+                        if (buttonStateRight > 0 && buttonStateLeft > 0) {
                             this._adjustHeight = true;
                         }
                     }
@@ -479,7 +486,7 @@ namespace GG2PlayerScale
             float newHeight = DEFAULT_HEIGHT;
             if (float.TryParse(txtPlayerHeight.Text.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out newHeight))
             {
-                if(newHeight != this._playerHeight && newHeight >= 100 && newHeight <= 250)
+                if(newHeight != this._playerHeight && newHeight >= 100 && newHeight <= 2500)
                 {
                     this._playerHeight = newHeight;
                     this._jsonIni.Write("Height", this._playerHeight.ToString(CultureInfo.InvariantCulture));

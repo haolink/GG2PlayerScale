@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 
 using Valve.VR;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace GG2PlayerScale
 {
@@ -34,18 +35,22 @@ namespace GG2PlayerScale
         {
             CVRSystem system = null;
             this._system = null;
+
+            EVRInitError eie = new EVRInitError();
             try
             {
-                EVRInitError eie = new EVRInitError();
                 system = OpenVR.Init(ref eie, EVRApplicationType.VRApplication_Background);
             }
             catch (Exception ex)
             {
-                system = null;                
+                system = null;
+                //MessageBox.Show("Err 1: " + ex.Message);
             }
             
             if(system == null)
             {
+                string error = OpenVR.GetStringForHmdError(eie);
+                //MessageBox.Show("Err 2: " + error);
                 return false;
             }
 
