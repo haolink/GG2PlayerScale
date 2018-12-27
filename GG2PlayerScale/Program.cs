@@ -22,11 +22,26 @@ namespace GG2PlayerScale
         /// Der Haupteinstiegspunkt für die Anwendung.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
+            MainForm.VRMode vrMode = MainForm.VRMode.Any;
+
+            foreach (string arg in args)
+            {
+                string r = arg.ToLowerInvariant();
+                if (r == "-oculus")
+                {
+                    vrMode = MainForm.VRMode.Oculus;
+                }
+                else if(r == "-openvr")
+                {
+                    vrMode = MainForm.VRMode.OpenVR;
+                }
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            Application.Run(new MainForm(vrMode));
         }
     }
 }

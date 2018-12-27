@@ -27,6 +27,13 @@ namespace GG2PlayerScale
 {
     public partial class MainForm : Form
     {
+        public enum VRMode
+        {
+            Any,
+            Oculus,
+            OpenVR
+        }
+
         const long PATCH_JUMPIN_OFFSET1 = 0x4F12F0; //4F1AD0
         const long PATCH_JUMPOUT_OFFSET1 = 0x4F1301; //4F1301
 
@@ -93,7 +100,7 @@ namespace GG2PlayerScale
         /// </summary>
         private bool _vrAvailable;
 
-        public MainForm()
+        public MainForm(VRMode vrMode = VRMode.Any)
         {
             InitializeComponent();
 
@@ -135,28 +142,35 @@ namespace GG2PlayerScale
 
             this._oculusWrapper = null;
 
-            /*try
-            {
-                _oculusWrapper = new OculusTouchWrapper();
-                this._vrAvailable = true;
-            } catch(Exception ex)
-            {
-                _oculusWrapper = null;
-                this._vrAvailable = false;
-            }*/
-
-            if(this._oculusWrapper == null)
+            if(vrMode != VRMode.OpenVR)
             {
                 try
                 {
-                    this._openVRWrapper = new OpenVRWrapper();
+                    _oculusWrapper = new OculusTouchWrapper();
                     this._vrAvailable = true;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    //MessageBox.Show("Err 3: " + ex.Message);
-                    this._openVRWrapper = null;
+                    _oculusWrapper = null;
                     this._vrAvailable = false;
+                }
+            }
+
+            if (vrMode != VRMode.Oculus)
+            {
+                if (this._oculusWrapper == null)
+                {
+                    try
+                    {
+                        this._openVRWrapper = new OpenVRWrapper();
+                        this._vrAvailable = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        //MessageBox.Show("Err 3: " + ex.Message);
+                        this._openVRWrapper = null;
+                        this._vrAvailable = false;
+                    }
                 }
             }
 
