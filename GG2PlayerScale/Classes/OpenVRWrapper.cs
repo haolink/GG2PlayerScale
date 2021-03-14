@@ -18,9 +18,11 @@ using Valve.VR;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
+using System.IO;
+
 namespace GG2PlayerScale
 {
-    class OpenVRWrapper
+    class OpenVRWrapper : VRWrapper
     {
         /// <summary>
         /// OpenVR wrapper.
@@ -28,13 +30,54 @@ namespace GG2PlayerScale
         private CVRSystem _system = null;
 
         /// <summary>
-        /// Checks if an Oculus device is available.
+        /// Should we use OpenVR legacy input?
+        /// </summary>
+        private bool _useLegacyInput;
+
+        /// <summary>
+        /// Master handle.
+        /// </summary>
+        private ulong actionHandle;
+
+        /// <summary>
+        /// Modern action: Viewport reset
+        /// </summary>
+        private ulong actionResetViewport;
+
+        /// <summary>
+        /// Modern action: Viewport reset - semi action by pressing right grip
+        /// </summary>
+        private ulong actionResetViewportRightGrip;
+
+        /// <summary>
+        /// Modern action: Viewport reset - semi action by pressing left grip
+        /// </summary>
+        private ulong actionResetViewportLeftGrip;
+
+        /// <summary>
+        /// Action Set Array.
+        /// </summary>
+        private VRActiveActionSet_t[] mActionSetArray;
+
+        /// <summary>
+        /// Loads an action from the VR manifest.
+        /// </summary>
+        /// <param name="actionName"></param>
+        /// <param name="handle"></param>
+        /// <returns></returns>
+        private bool LoadAction(string actionName, ref ulong handle)
+        {
+            EVRInputError ioError = OpenVR.Input.GetActionHandle(actionName, ref handle);
+            return (ioError == EVRInputError.None);           
+        }
+
+        /// <summary>
+        /// Checks if it can connect to OpenVR.
         /// </summary>
         /// <returns></returns>
-        private bool IsOpenVREnabled()
+        private bool AttemptOpenVRConnection(ref CVRSystem system)
         {
-            CVRSystem system = null;
-            this._system = null;
+            system = null;
 
             EVRInitError eie = new EVRInitError();
             try
@@ -46,15 +89,71 @@ namespace GG2PlayerScale
                 system = null;
                 //MessageBox.Show("Err 1: " + ex.Message);
             }
-            
-            if(system == null)
+
+            if (eie == EVRInitError.Init_NoServerForBackgroundApp)
             {
-                string error = OpenVR.GetStringForHmdError(eie);
-                //MessageBox.Show("Err 2: " + error);
+                system = null;
+                return true;
+            }
+            if (system == null)
+            {
                 return false;
             }
 
-            this._system = system;
+            this._useLegacyInput = true;
+
+            EVRApplicationError appError = OpenVR.Applications.AddApplicationManifest(Path.GetFullPath("./manifest/app.vrmanifest"), false);
+            if (appError != EVRApplicationError.None)
+            {
+                return true; //Will use legacy input
+            }
+
+            EVRInputError ioError = OpenVR.Input.SetActionManifestPath(Path.GetFullPath("./manifest/actions.json"));
+            if (ioError != EVRInputError.None)
+            {
+                return true; //Will use legacy input
+            }
+
+            if (!LoadAction("/actions/default/in/reset_viewport", ref this.actionResetViewport))
+            {
+                return true; //Will use legacy input
+            }
+            if (!LoadAction("/actions/default/in/reset_viewport_leftgrip", ref this.actionResetViewportLeftGrip))
+            {
+                return true; //Will use legacy input
+            }
+            if (!LoadAction("/actions/default/in/reset_viewport_rightgrip", ref this.actionResetViewportRightGrip))
+            {
+                return true; //Will use legacy input
+            }
+
+            if (OpenVR.Input.GetActionSetHandle("/actions/default", ref this.actionHandle) != EVRInputError.None)
+            {
+                return true; //Will use legacy input
+            }
+            this._useLegacyInput = false; //Actions loaded successfully, we can use the modern input.
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if SteamVR is available.
+        /// </summary>
+        /// <returns></returns>
+        private bool IsOpenVRAvailable()
+        {
+            this._system = null;
+            CVRSystem system = null;
+            if (!AttemptOpenVRConnection(ref system))
+            {
+                return false;
+            }
+
+            if (system != null)
+            {
+                this._system = system;
+            }
+          
             return true;
         }
 
@@ -63,7 +162,7 @@ namespace GG2PlayerScale
         /// </summary>
         public OpenVRWrapper()
         {
-            if (!this.IsOpenVREnabled())
+            if (!this.IsOpenVRAvailable())
             {
                 throw new NotSupportedException("OpenVR not supported on this computer");
             }
@@ -83,6 +182,26 @@ namespace GG2PlayerScale
         }
 
         /// <summary>
+        /// Runs through all application events and acknowledges a SteamVR close event.
+        /// </summary>
+        private bool PreventClosure()
+        {
+            VREvent_t ev = new VREvent_t();
+
+            while (this._system.PollNextEvent(ref ev, (uint)Marshal.SizeOf(ev)))
+            {
+                if (ev.eventType == (uint)(EVREventType.VREvent_Quit))
+                {
+                    this._system.AcknowledgeQuit_Exiting();
+                    OpenVR.Shutdown();
+                    this._system = null;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Gets the pressed buttons on the device.
         /// </summary>
         /// <returns></returns>
@@ -91,8 +210,25 @@ namespace GG2PlayerScale
             leftHand = null;
             rightHand = null;
 
+            if (this._system == null)
+            {
+                CVRSystem system = null;
+                AttemptOpenVRConnection(ref system);
+                if (system == null)
+                {
+                    return false;
+                }
+
+                this._system = system;
+            }
+
             try
             {
+                if (!this.PreventClosure())
+                {
+                    return false;
+                }
+
                 uint leftHandIndex = this._system.GetTrackedDeviceIndexForControllerRole(ETrackedControllerRole.LeftHand);
                 uint rightHandIndex = this._system.GetTrackedDeviceIndexForControllerRole(ETrackedControllerRole.RightHand);
 
@@ -138,6 +274,110 @@ namespace GG2PlayerScale
             }
 
             return null;
+        }
+
+        private bool UpdateEventState()
+        {
+            /*var vrEvents = new List<VREvent_t>();
+            var vrEvent = new VREvent_t();
+            try
+            {
+                while (OpenVR.System.PollNextEvent(ref vrEvent, (uint)(Marshal.SizeOf(vrEvent))))
+                {
+                    vrEvents.Add(vrEvent);
+                }
+            } */           
+
+            // #6 Update action set
+            if (mActionSetArray == null)
+            {
+                var actionSet = new VRActiveActionSet_t
+                {
+                    ulActionSet = actionHandle,
+                    ulRestrictedToDevice = OpenVR.k_ulInvalidActionSetHandle,
+                    nPriority = 0
+                };
+                mActionSetArray = new VRActiveActionSet_t[] { actionSet };
+            }
+
+            var errorUAS = OpenVR.Input.UpdateActionState(mActionSetArray, (uint)Marshal.SizeOf(typeof(VRActiveActionSet_t)));
+            if (errorUAS != EVRInputError.None)
+            {
+                return false;
+            }
+
+            return true;
+        } 
+
+        public bool CheckActionState(ulong actionCode)
+        {            
+            ulong leftHandle = 0;
+            OpenVR.Input.GetInputSourceHandle("/user/hand/left", ref leftHandle);
+            ulong rightHandle = 0;
+            OpenVR.Input.GetInputSourceHandle("/user/hand/right", ref rightHandle);
+            ulong[] handles = new ulong[] { leftHandle, rightHandle };
+
+            bool pressed = false;
+
+            foreach (var handle in handles)
+            {
+                InputDigitalActionData_t action = new InputDigitalActionData_t();
+                uint size = (uint)Marshal.SizeOf(typeof(InputDigitalActionData_t));
+                EVRInputError ioError = OpenVR.Input.GetDigitalActionData(actionCode, ref action, size, handle);
+                if (ioError != EVRInputError.None)
+                {
+                    continue;
+                }
+
+                if (action.bState)
+                {
+                    pressed = true;
+                }
+            }
+
+            return pressed;
+        }
+
+        public bool ShouldCreateScreenshot()
+        {
+            return false;
+        }
+
+        public bool ShouldResetViewport()
+        {
+            if (!this._useLegacyInput && this.UpdateEventState())
+            {
+                return CheckActionState(actionResetViewport);
+            }
+            else
+            {
+                VRControllerState_t? leftHandN, rightHandN;
+
+                if (this.GetButtonState(out leftHandN, out rightHandN))
+                {
+                    if (leftHandN != null && rightHandN != null)
+                    {
+                        VRControllerState_t leftHand = leftHandN.Value;
+                        VRControllerState_t rightHand = rightHandN.Value;
+                        ulong buttonsLeft = leftHand.ulButtonPressed;
+                        ulong buttonsRight = rightHand.ulButtonPressed;
+
+                        //Grip button: 1 << k_EButton_Grip = 4
+
+                        ulong buttonStateLeft = (buttonsLeft & (ulong)4);
+                        ulong buttonStateRight = (buttonsRight & (ulong)4);
+
+                        if (buttonStateRight > 0 && buttonStateLeft > 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }            
+
+            return false;
         }
     }
 }

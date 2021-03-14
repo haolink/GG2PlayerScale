@@ -51,6 +51,11 @@ namespace GG2PlayerScale
         private OpenVRWrapper _openVRWrapper;
 
         /// <summary>
+        /// Generic wrapper, should phase out the Oculus and OpenVR wrappers.
+        /// </summary>
+        private VRWrapper _vrWrapper;
+
+        /// <summary>
         /// JSON INI file.
         /// </summary>
         private JSONINIFile _jsonIni;
@@ -140,6 +145,9 @@ namespace GG2PlayerScale
 
             this.chkEnableEndScale_CheckedChanged(null, new EventArgs());
 
+            this.chkResetScaleGradually.CheckedChanged += SaveCheckImmediate;
+            this.chkResetWorldScale.CheckedChanged += SaveCheckImmediate;
+
             this._oculusWrapper = null;
 
             if(vrMode != VRMode.OpenVR)
@@ -171,6 +179,18 @@ namespace GG2PlayerScale
                         this._openVRWrapper = null;
                         this._vrAvailable = false;
                     }
+                }
+            }
+
+            if (this._vrAvailable)
+            {
+                if (this._openVRWrapper != null)
+                {
+                    this._vrWrapper = this._openVRWrapper;
+                }
+                else if (this._oculusWrapper != null)
+                {
+                    this._vrWrapper = this._oculusWrapper;
                 }
             }
 
@@ -254,9 +274,14 @@ namespace GG2PlayerScale
         private bool _isPatched;
 
         /// <summary>
-        /// Address of the patch data.
+        /// Address of the assembly patch data.
         /// </summary>
         private long _patchAddress;
+
+        /// <summary>
+        /// Address of the array patch data.
+        /// </summary>
+        private long _arrayPatchAddress;
 
         /// <summary>
         /// Player scale.
@@ -315,7 +340,28 @@ namespace GG2PlayerScale
             bool wasAdjusting = this._adjustHeight;
 
             this._adjustHeight = false;
-            if (this._oculusWrapper != null)
+            if (this._vrWrapper != null)
+            {
+                if (this._vrWrapper.ShouldResetViewport())
+                {
+                    this._adjustHeight = true;
+                }
+
+                if (this._vrWrapper.ShouldCreateScreenshot())
+                {
+                    if (!_hasBeenCapturing)
+                    {
+                        this.CaptureScreenshot();
+                        _hasBeenCapturing = true;
+                    }
+                }
+                else
+                {
+                    _hasBeenCapturing = false;
+                }
+            }
+
+            /*if (this._oculusWrapper != null)
             {
                 OvrButton buttons = this._oculusWrapper.GetButtonState();
 
@@ -360,7 +406,7 @@ namespace GG2PlayerScale
                         }
                     }
                 }
-            }
+            }*/
 
             if (this._adjustHeight)
             {
@@ -386,28 +432,34 @@ namespace GG2PlayerScale
 
                 if (this.chkResetScaleGradually.Checked)
                 {
-                    if (this._adjustHeight && !wasAdjusting)
+                    try
                     {
-                        if (this._scaleResetManager.Enabled)
+                        if (this._adjustHeight && !wasAdjusting)
                         {
-                            this._scaleResetManager.StopProcess();
+                            if (this._scaleResetManager.Enabled)
+                            {
+                                this._scaleResetManager.StopProcess();
+                            }
+                            this._scaleResetManager.StartProcess(this._playerScale, (float)(1.0 / this._playerScale), RESET_TIME, 0, 1.0f, RESET_TIME);
                         }
-                        this._scaleResetManager.StartProcess(this._playerScale, (float)(1.0 / this._playerScale), RESET_TIME, 0, 1.0f, RESET_TIME);
-                    }
-                    else if (!this._adjustHeight && wasAdjusting)
+                        else if (!this._adjustHeight && wasAdjusting)
+                        {
+                            float sScale = 1.0f;
+                            if (this._scaleResetManager.Enabled)
+                            {
+                                sScale = this._scaleResetManager.GetCurrentScale();
+                                this._scaleResetManager.StopProcess();
+                            }
+                            this._scaleResetManager.StartProcess(sScale, this._playerScale / sScale, RESET_TIME, 0, this._playerScale, RESET_TIME);
+                        }
+                    } catch(Exception ex)
                     {
-                        float sScale = 1.0f;
-                        if (this._scaleResetManager.Enabled)
-                        {
-                            sScale = this._scaleResetManager.GetCurrentScale();
-                            this._scaleResetManager.StopProcess();
-                        }
-                        this._scaleResetManager.StartProcess(sScale, this._playerScale / sScale, RESET_TIME, 0, this._playerScale, RESET_TIME);
+                        //Don't crash, just resume!
                     }
                 }
 
                 this.UpdateScale();
-                WriteLabelThreadSafe(this.lblConnect, "Connected to Gal*Gun2\r\nBase: " + this._memEditor.MainModuleAddress.ToString("X16") + "\r\nHook: " + this._patchAddress.ToString("X16"));
+                WriteLabelThreadSafe(this.lblConnect, "Connected to Gal*Gun2\r\nBase: " + this._memEditor.MainModuleAddress.ToString("X16") + "\r\nHook: " + this._patchAddress.ToString("X16") + " / " + this._arrayPatchAddress.ToString("X16"));
             }
             else
             {
@@ -618,6 +670,14 @@ namespace GG2PlayerScale
         {
             Thread.Sleep(3000);
 
+            long arrayAddress = 0;
+            if (!this._memEditor.AllocateMemoryBlock(2048, out arrayAddress))
+            {
+                this._isPatched = false;
+                this._arrayPatchAddress = 0;
+                return;
+            }
+
             long address = 0;
             if(!this._memEditor.AllocateMemoryBlock(2048, out address))
             {
@@ -631,14 +691,23 @@ namespace GG2PlayerScale
             {
                 address += (16 - modulo);
             }
+            modulo = (int)(arrayAddress % 16);
+            if (modulo > 0)
+            {
+                arrayAddress += (16 - modulo);
+            }
 
             this._patchAddress = address;
+            this._arrayPatchAddress = arrayAddress;
 
             byte[] patchCode = this._patchManager.AssemblyCode;
 
             byte[] _patchAddressBytes = BitConverter.GetBytes(this._patchAddress);
             Array.Copy(_patchAddressBytes, 0, patchCode, this._patchManager.BaseAddressOffsets[0], 8);
             Array.Copy(_patchAddressBytes, 0, patchCode, this._patchManager.BaseAddressOffsets[1], 8);
+
+            _patchAddressBytes = BitConverter.GetBytes(this._arrayPatchAddress);
+            Array.Copy(_patchAddressBytes, 0, patchCode, this._patchManager.ArrayAddressOffsets[0], 8);
 
             _patchAddressBytes = BitConverter.GetBytes(((long)(this._memEditor.MainModuleAddress + PATCH_JUMPOUT_OFFSET1)));
             Array.Copy(_patchAddressBytes, 0, patchCode, this._patchManager.Patch1LeavingOffset, 8);
@@ -739,7 +808,87 @@ namespace GG2PlayerScale
                 }
             }
 
+            bool isDokiDoki = false;
+            long dokiPointer = 0;
+            if (this._memEditor.ResolvePointer(new long[]
+                {
+                    this._memEditor.MainModuleAddress + 0x02A27070,
+                    0x720, 0x20, 0x268, 0x500
+                }, out dokiPointer))
+            {
+                byte[] isDokiBytes = this._memEditor.ReadMemory(dokiPointer + 0xA0, 1);
+                isDokiDoki = (isDokiBytes[0] == 1);
+            };
+
+            byte[] setDoki = new byte[1] { 0 };
+            if(isDokiDoki)
+            {
+                setDoki = new byte[1] { 1 };
+            }
+            this._memEditor.WriteMemory(this._patchAddress + this._patchManager.DokiDokiSwitch, setDoki);
+
             this._memEditor.WriteFloat(this._patchAddress + this._patchManager.CurrentCameraOffset, offset);
+
+            //Fixed cameras:
+
+            //Camera rotation
+            float rZ = 0.0f;
+            this._memEditor.ReadFloat(this._patchAddress + this._patchManager.CameraOrientationOffset + 0, out rZ);
+            float rW = 0.0f;
+            this._memEditor.ReadFloat(this._patchAddress + this._patchManager.CameraOrientationOffset + 4, out rW);
+
+            //Camera yaw
+            float siny_cosp = 2 * (rW * rZ);
+            float cosy_cosp = 1 - 2 * (rZ * rZ);
+            float yaw = (float)Math.Atan2(siny_cosp, cosy_cosp);
+
+            float rotFactorX = (float)Math.Cos(yaw);
+            float rotFactorY = (float)Math.Sin(yaw);
+            
+            uint arrayOffset = 0x00;
+
+            float deathOffsetZ = 24.0f - DEFAULT_HEIGHT + this._playerHeight * 0.93f * (float)scale;
+            this.UpdateCameraTranslationVectors(ref arrayOffset, BitConverter.GetBytes((uint)0xC1A00000), rotFactorX * (1 - (float)scale) * 75.0f, rotFactorY * (1 - (float)scale) * 75.0f, deathOffsetZ);
+
+            float devilDeathOffsetZ = 110.0f - DEFAULT_HEIGHT + this._playerHeight * 0.93f * (float)scale;
+            this.UpdateCameraTranslationVectors(ref arrayOffset, BitConverter.GetBytes((uint)0xC2DC0000), rotFactorX * (1 - (float)scale) * 105.0f, rotFactorY * (1 - (float)scale) * 105.0f, devilDeathOffsetZ);
+
+            float cKissIdent = -100.0f + (1 - currentScale) * 150.0f;
+            float cKissDateIdent = -105.0f + (1 - currentScale) * 150.0f;
+
+            this.UpdateCameraTranslationVectors(ref arrayOffset, BitConverter.GetBytes(cKissIdent), rotFactorX * (1 - (float)scale) * 40.0f, rotFactorY * (1 - (float)scale) * 40.0f, (float)(50.0f * (scale - 1.0f)));
+            this.UpdateCameraTranslationVectors(ref arrayOffset, BitConverter.GetBytes(cKissDateIdent), rotFactorX * (1 - (float)scale) * 40.0f, rotFactorY * (1 - (float)scale) * 40.0f, (float)(45.0f * (scale - 1.0f)));
+
+            this.UpdateCameraTranslationVectors(ref arrayOffset, null, 0.0f, 0.0f, 0.0f);
+
+            this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 0, rotFactorX * (1 - (float)scale) * 50.0f);
+            this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 4, rotFactorY * (1 - (float)scale) * 50.0f);
+            this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 8, -64.0f + 87.0f * (1 - currentScale) + this._playerHeight * 0.93f * (float)scale);
+
+            /*//Block default death camera - camera value: -20.0, offset: 0x00
+            this._memEditor.WriteMemory(this._arrayPatchAddress + 0x00, BitConverter.GetBytes((long)0xC1A00000));
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x10, deathOffsetX);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x14, deathOffsetY);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x18, deathOffsetZ);
+
+            //Block devil death camera - camera value: -110.0, offset: 0x20
+            this._memEditor.WriteMemory(this._arrayPatchAddress + 0x20, BitConverter.GetBytes((long)0xC2DC0000));
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x30, deathOffsetX);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x34, deathOffsetY);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x38, devilDeathOffsetZ);
+
+            this._memEditor.WriteMemory(this._arrayPatchAddress + 0x40, BitConverter.GetBytes((long)0x422A0000));
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x50, 0.0f);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x54, 0.0f);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x58, (float)(42.5f * (scale - 1.0f)));
+
+            this._memEditor.WriteMemory(this._arrayPatchAddress + 0x60, BitConverter.GetBytes((long)0x42160000));
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x70, 0.0f);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x74, 0.0f);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + 0x78, (float)(37.5f * (scale - 1.0f)));*/
+
+            //End block - offset: 0x60
+            //this._memEditor.WriteMemory(this._arrayPatchAddress + 0x80, BitConverter.GetBytes((long)0x00000000));
 
             long worldScaleOffset = 0;
 
@@ -758,10 +907,54 @@ namespace GG2PlayerScale
                 this._memEditor.WriteFloat(worldScaleOffset + 0x470, worldScale, true);
             };
 
+            float nearPlane = 10.0f;
+            nearPlane *= (float)Math.Max(0.01f, scale);
+            this._memEditor.WriteFloat(this._memEditor.MainModuleAddress + 0x02689C84, nearPlane);
+
             //this._memEditor.WriteFloat(this._patchAddress + this._patchManager.SubtitleOffset, this._subtitleOffset);
 
             this.UpdateHeightDisplay();
             this.UpdateScaleDisplay();
+        }
+        
+        /// <summary>
+        /// Updates the camera translations.
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="ident"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        private void UpdateCameraTranslationVectors(ref uint offset, byte[] ident, float x, float y, float z)
+        {
+            byte[] sendIdent = ident;
+            if(ident == null)
+            {
+                sendIdent = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+            }
+            else
+            {
+                bool allZero = true;
+                foreach(byte bt in sendIdent)
+                {
+                    if (bt != 0)
+                    {
+                        allZero = false;
+                        break;
+                    }
+                }
+                if (allZero)
+                {
+                    sendIdent[0] = 0x01;
+                }
+            }
+
+            this._memEditor.WriteMemory(this._arrayPatchAddress + offset + 0x00, sendIdent);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + offset + 0x10, x);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + offset + 0x14, y);
+            this._memEditor.WriteFloat(this._arrayPatchAddress + offset + 0x18, z);
+
+            offset += 0x20;
         }
 
         /// <summary>
@@ -1106,6 +1299,7 @@ namespace GG2PlayerScale
         {
             this._jsonIni.WriteBool("ResetGradually", this.chkResetScaleGradually.Checked, null);
             this._jsonIni.WriteBool("ResetWorldScale", this.chkResetWorldScale.Checked, null);
+            this._jsonIni.SaveData();
         }
     }
 }

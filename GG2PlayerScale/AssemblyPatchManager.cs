@@ -36,6 +36,21 @@ namespace GG2PlayerScale
         public int CurrentCameraOffset { get; private set; }
 
         /// <summary>
+        /// Doki doki camera offset.
+        /// </summary>
+        public int DokiDokiCameraOffset { get; private set; }
+
+        /// <summary>
+        /// Doki doki detected on or off.
+        /// </summary>
+        public int DokiDokiSwitch { get; private set; }
+
+        /// <summary>
+        /// Camera rotation data.
+        /// </summary>
+        public int CameraOrientationOffset { get; private set; }
+
+        /// <summary>
         /// Subtitle rendering offset.
         /// </summary>
         public int SubtitleOffset { get; private set; }
@@ -44,6 +59,11 @@ namespace GG2PlayerScale
         /// The base address the patch code is added to needs to be stored here.
         /// </summary>
         public int[] BaseAddressOffsets { get; private set; }
+
+        /// <summary>
+        /// The array patch address where a readable array is linked.
+        /// </summary>
+        public int[] ArrayAddressOffsets { get; private set; }
 
         /// <summary>
         /// First code patch entry offset.
@@ -75,6 +95,9 @@ namespace GG2PlayerScale
             this.DefaultSceneHeightOffset = 0x04;
             this.CurrentCameraOffset = 0x48;
             this.SubtitleOffset = 0x58;
+            this.CameraOrientationOffset = 0x60;
+            this.DokiDokiCameraOffset = 0x70;
+            this.DokiDokiSwitch = 0x08;
 
             long[] offsets = patchCode.IndexesOf(Encoding.ASCII.GetBytes("RETURN01")).ToArray();
             if(offsets.Length != 1)
@@ -96,6 +119,13 @@ namespace GG2PlayerScale
                 throw new Exception("Unable to find DEADCAFE");
             }
             this.BaseAddressOffsets = new int[] { (int)offsets[0], (int)offsets[1] };
+
+            offsets = patchCode.IndexesOf(BitConverter.GetBytes(0xCAFECAFEDEADDEAD)).ToArray();
+            if (offsets.Length != 1)
+            {
+                throw new Exception("Unable to find 0xCAFECAFEDEADDEAD");
+            }
+            this.ArrayAddressOffsets = new int[] { (int)offsets[0] };
 
             offsets = patchCode.IndexesOf(Encoding.ASCII.GetBytes("CAMUPDATE")).ToArray();
             if (offsets.Length != 1)

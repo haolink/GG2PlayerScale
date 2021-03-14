@@ -315,7 +315,6 @@
             this.chkResetWorldScale.TabIndex = 6;
             this.chkResetWorldScale.Text = "Reset world scale while scale reset is active";
             this.chkResetWorldScale.UseVisualStyleBackColor = true;
-            this.chkResetWorldScale.CheckedChanged += new System.EventHandler(this.SaveCheckImmediate);
             // 
             // MainForm
             // 

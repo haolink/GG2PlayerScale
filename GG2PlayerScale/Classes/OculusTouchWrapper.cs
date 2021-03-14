@@ -51,7 +51,7 @@ namespace GG2PlayerScale
         LMask = X | Y | LThumb | LShoulder | Enter,
     };
 
-    public class OculusTouchWrapper
+    public class OculusTouchWrapper : VRWrapper
     {
         /// <summary>
         /// Oculus wrapper.
@@ -208,6 +208,20 @@ namespace GG2PlayerScale
             }
 
             return buttonsPressed;
+        }
+
+        public bool ShouldCreateScreenshot()
+        {
+            OvrButton buttons = this.GetButtonState();
+
+            return ((buttons & (OvrButton.A | OvrButton.X)) != 0);
+        }
+
+        public bool ShouldResetViewport()
+        {
+            OvrButton buttons = this.GetButtonState();
+
+            return ((buttons & (OvrButton.B | OvrButton.Y)) != 0);            
         }
     }
 }
