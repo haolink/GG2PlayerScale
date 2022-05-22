@@ -6,31 +6,31 @@
       "/actions/default" : {
 	  	 "chords" : [            
          ],
-         "sources" : [
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/default/in/reset_viewport"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/right/input/thumbstick"
+        "sources": [
+          {
+            "inputs": {
+              "click": {
+                "output": "/actions/default/in/reset_viewport"
+              }
             },
-			{
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/default/in/reset_viewport"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/left/input/thumbstick"
-            }
-         ]
+            "mode": "button",
+            "path": "/user/hand/right/input/thumbstick"
+          },
+          {
+            "inputs": {
+              "click": {
+                "output": "/actions/default/in/reset_viewport"
+              }
+            },
+            "mode": "button",
+            "path": "/user/hand/left/input/thumbstick"
+          }
+        ]
       }
    },
    "category" : "steamvr_input",
    "controller_type" : "knuckles",
-   "description" : "Default height reset happens when pressing the right B button",
+   "description" : "Default height reset happens when pressing any of the thumb sticks",
    "name" : "Default GG2 Scaler configuration",
    "options" : {},
    "simulated_actions" : []

@@ -98,6 +98,7 @@
     <None Include="Assembly\patch.bin" />
     <None Include="OVRManifests\actions.json" />
     <None Include="OVRManifests\app.vrmanifest" />
+    <None Include="OVRManifests\bindings_holographic_controller.json" />
     <None Include="OVRManifests\bindings_knuckles.json" />
     <None Include="OVRManifests\bindings_vive.json" />
     <None Include="packages.config" />
@@ -127,7 +128,8 @@ IlMerge /v4 /out:GG2PlayerScale.exe GG2PlayerScale_Pre.exe Ab3d.OculusWrap.dll</
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>cd /d "$(ProjectDir)\Assembly"
-fasm patch.asm patch.bin</PreBuildEvent>
+fasm patch.asm patch.bin
+xcopy /e /y "$(ProjectDir)\OVRManifests" "$(TargetDir)\manifest"</PreBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

@@ -10,27 +10,27 @@
         {
           "inputs": {
             "click": {
-              "output": "/actions/default/in/reset_viewport_leftgrip"
+              "output": "/actions/default/in/reset_viewport"
             }
           },
           "mode": "button",
-          "path": "/user/hand/left/input/grip"
+          "path": "/user/hand/right/input/joystick"
         },
         {
           "inputs": {
             "click": {
-              "output": "/actions/default/in/reset_viewport_rightgrip"
+              "output": "/actions/default/in/reset_viewport"
             }
           },
           "mode": "button",
-          "path": "/user/hand/right/input/grip"
+          "path": "/user/hand/left/input/joystick"
         }
       ]
     }
   },
   "category": "steamvr_input",
-  "controller_type": "vive_controller",
-  "description": "Default height reset happens when pressing both grips.",
+  "controller_type": "holographic_controller",
+  "description": "Default height reset happens when pressing any of the joystics",
   "name": "Default GG2 Scaler configuration",
   "options": {},
   "simulated_actions": []

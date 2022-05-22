@@ -35,6 +35,11 @@ namespace GG2PlayerScale
         private bool _useLegacyInput;
 
         /// <summary>
+        /// Are we using Legacy input?
+        /// </summary>
+        public bool UseLegacyInput { get { return _useLegacyInput; } }
+
+        /// <summary>
         /// Master handle.
         /// </summary>
         private ulong actionHandle;
@@ -53,6 +58,16 @@ namespace GG2PlayerScale
         /// Modern action: Viewport reset - semi action by pressing left grip
         /// </summary>
         private ulong actionResetViewportLeftGrip;
+
+        /// <summary>
+        /// Controller type.
+        /// </summary>
+        private string _controllerType;
+
+        /// <summary>
+        /// Controller type.
+        /// </summary>
+        public string ControllerType { get { return _controllerType; } }
 
         /// <summary>
         /// Action Set Array.
@@ -101,6 +116,7 @@ namespace GG2PlayerScale
             }
 
             this._useLegacyInput = true;
+            this._controllerType = null;
 
             EVRApplicationError appError = OpenVR.Applications.AddApplicationManifest(Path.GetFullPath("./manifest/app.vrmanifest"), false);
             if (appError != EVRApplicationError.None)
@@ -126,11 +142,12 @@ namespace GG2PlayerScale
             {
                 return true; //Will use legacy input
             }
-
+            
             if (OpenVR.Input.GetActionSetHandle("/actions/default", ref this.actionHandle) != EVRInputError.None)
             {
                 return true; //Will use legacy input
             }
+
             this._useLegacyInput = false; //Actions loaded successfully, we can use the modern input.
 
             return true;
@@ -332,12 +349,23 @@ namespace GG2PlayerScale
         public bool CheckActionState(ulong actionCode)
         {            
             ulong leftHandle = 0;
-            OpenVR.Input.GetInputSourceHandle("/user/hand/left", ref leftHandle);
+            OpenVR.Input.GetInputSourceHandle(OpenVR.k_pchPathUserHandLeft, ref leftHandle);
             ulong rightHandle = 0;
-            OpenVR.Input.GetInputSourceHandle("/user/hand/right", ref rightHandle);
+            OpenVR.Input.GetInputSourceHandle(OpenVR.k_pchPathUserHandRight, ref rightHandle);
             ulong[] handles = new ulong[] { leftHandle, rightHandle };
 
             bool pressed = false;
+
+            if (this._controllerType == null)
+            {
+                InputOriginInfo_t originInfo = new InputOriginInfo_t();
+                StringBuilder sb = new StringBuilder(256);
+                ETrackedPropertyError err = ETrackedPropertyError.TrackedProp_Success;
+                OpenVR.Input.GetOriginTrackedDeviceInfo(leftHandle, ref originInfo, (uint)Marshal.SizeOf(originInfo));
+                this._system.GetStringTrackedDeviceProperty(originInfo.trackedDeviceIndex, ETrackedDeviceProperty.Prop_ControllerType_String, sb, 256, ref err);
+
+                this._controllerType = sb.ToString();
+            }           
 
             foreach (var handle in handles)
             {
@@ -367,7 +395,14 @@ namespace GG2PlayerScale
         {
             if (!this._useLegacyInput && this.UpdateEventState())
             {
-                return CheckActionState(actionResetViewport);
+                bool knucklesAction = CheckActionState(actionResetViewport);
+
+                if (knucklesAction)
+                {
+                    return true;
+                }
+
+                return (CheckActionState(actionResetViewportLeftGrip) && CheckActionState(actionResetViewportRightGrip));
             }
             else
             {

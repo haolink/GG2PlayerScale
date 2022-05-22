@@ -22,6 +22,7 @@ using System.IO;
 using GGVREditor;
 using Valve.VR;
 using System.Resources;
+using Microsoft.Win32;
 
 namespace GG2PlayerScale
 {
@@ -104,13 +105,25 @@ namespace GG2PlayerScale
         /// Is VR available?
         /// </summary>
         private bool _vrAvailable;
+        
+        /// <summary>
+        /// Default text for reset world scale.
+        /// </summary>
+        private string _resetDefaultText;
+
+        /// <summary>
+        /// Last controller type.
+        /// </summary>
+        private string _lastControllerType;
 
         public MainForm(VRMode vrMode = VRMode.Any)
         {
             InitializeComponent();
 
             this._jsonIni = new JSONINIFile();
-            this._playerHeight = DEFAULT_HEIGHT;
+            //this._playerHeight = DEFAULT_HEIGHT;
+            this._eyeHeight = 160.0f;
+            this.UpdateEyeHeightDisplay();
 
             this._paused = false;
             this._scalePaused = false;
@@ -119,13 +132,16 @@ namespace GG2PlayerScale
 
             string pHeight = this._jsonIni.Read("Height", null, "invalid");
             float pHeightF;
-            if(float.TryParse(pHeight, out pHeightF) && pHeightF > 100 && pHeightF < 250)
+            /*if(float.TryParse(pHeight, out pHeightF) && pHeightF > 100 && pHeightF < 250)
             {
                 this._playerHeight = pHeightF;
-            }
+            }*/
 
-            MainForm.WriteTextboxThreadSafe(txtPlayerHeight, this._playerHeight.ToString(CultureInfo.InvariantCulture));
-            this._jsonIni.Write("Height", this._playerHeight.ToString(CultureInfo.InvariantCulture));
+            this._lastControllerType = null;
+            this._resetDefaultText = this.gbScaleReset.Text;
+            
+            //MainForm.WriteTextboxThreadSafe(txtPlayerHeight, this._playerHeight.ToString(CultureInfo.InvariantCulture));
+            //this._jsonIni.Write("Height", this._playerHeight.ToString(CultureInfo.InvariantCulture));
 
             this._subtitleOffset = (float)(this._jsonIni.ReadFloat("SubtitleOffset", null, 30.0));
             if(this._subtitleOffset < -20 || this._subtitleOffset > 100)
@@ -149,6 +165,24 @@ namespace GG2PlayerScale
             this.chkResetWorldScale.CheckedChanged += SaveCheckImmediate;
 
             this._oculusWrapper = null;
+
+            if(vrMode == VRMode.Any)
+            {
+                string xrRuntime = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\OpenXR\1", "ActiveRuntime", null);
+
+                if (xrRuntime != null)
+                {
+                    string xrJson = Path.GetFileName(xrRuntime).ToLowerInvariant();
+                    if (xrJson == "steamxr_win64.json" || xrJson == "steam_runtime.json")
+                    {
+                        vrMode = VRMode.OpenVR;
+                    }
+                    if (xrJson == "oculus_openxr_64.json")
+                    {
+                        vrMode = VRMode.Oculus;
+                    }
+                }
+            }
 
             if(vrMode != VRMode.OpenVR)
             {
@@ -299,9 +333,14 @@ namespace GG2PlayerScale
         private bool _adjustHeight;
 
         /// <summary>
-        /// Player's real height.
+        /// Player's real height. (not needed anymore)
         /// </summary>
-        private float _playerHeight;
+        //private float _playerHeight;
+
+        /// <summary>
+        /// Player's eye height.
+        /// </summary>
+        private float _eyeHeight;
 
         /// <summary>
         /// A screenshot has been captured.
@@ -418,7 +457,7 @@ namespace GG2PlayerScale
             }
 
             this.ReadPlayerScale();
-            this.ReadPlayerHeight();
+            //this.ReadPlayerHeight();
             this.ReadSubtitleOffset();            
 
             if (_memEditor.Connect())
@@ -462,6 +501,20 @@ namespace GG2PlayerScale
                 {
                     this.UpdateScale();
                     WriteLabelThreadSafe(this.lblConnect, "Connected to Gal*Gun2\r\nBase: " + this._memEditor.MainModuleAddress.ToString("X16") + "\r\nHook: " + this._patchAddress.ToString("X16") + " / " + this._arrayPatchAddress.ToString("X16"));
+                    
+                    if (this._openVRWrapper != null && !this._openVRWrapper.UseLegacyInput && this._openVRWrapper.ControllerType != this._lastControllerType)
+                    {
+                        this._lastControllerType = this._openVRWrapper.ControllerType.ToLowerInvariant();
+
+                        if (this._lastControllerType == "knuckles" || this._lastControllerType == "holographic_controller")
+                        {
+                            WriteGroupBoxThreadSafe(this.gbScaleReset, this._resetDefaultText + " (Press a thumbstick down to activate)");
+                        } 
+                        else
+                        {
+                            WriteGroupBoxThreadSafe(this.gbScaleReset, this._resetDefaultText + " (Hold both grips at the same time to activate)");
+                        }
+                    }
                 } 
                 catch(Exception ex)
                 {
@@ -556,7 +609,7 @@ namespace GG2PlayerScale
         /// <summary>
         /// Reads player height.
         /// </summary>
-        private void ReadPlayerHeight()
+        /*private void ReadPlayerHeight()
         {
             float newHeight = DEFAULT_HEIGHT;
             if (float.TryParse(txtPlayerHeight.Text.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out newHeight))
@@ -568,7 +621,7 @@ namespace GG2PlayerScale
                     //this._jsonIni.SaveData();
                 }
             }            
-        }
+        }*/
 
         /// <summary>
         /// Reads subtitle offset.
@@ -615,6 +668,38 @@ namespace GG2PlayerScale
             else
             {
                 label.Text = text;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="label"></param>
+        /// <param name="text"></param>
+        public static void WriteGroupBoxThreadSafe(GroupBox gb, string text)
+        {
+            if (gb == null)
+            {
+                return;
+            }
+
+            if (gb.InvokeRequired)
+            {
+                try
+                {
+                    gb.Invoke((MethodInvoker)delegate
+                    {
+                        WriteGroupBoxThreadSafe(gb, text);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    //Ah well
+                }
+            }
+            else
+            {
+                gb.Text = text;
             }
         }
 
@@ -754,6 +839,15 @@ namespace GG2PlayerScale
         }
 
         /// <summary>
+        /// Writes the player eye height.
+        /// </summary>
+        private void UpdateEyeHeightDisplay()
+        {
+            MainForm.WriteLabelThreadSafe(this._lblEyeHeight, this._eyeHeight.ToString("0") + " cm");
+            MainForm.WriteLabelThreadSafe(this._lblPlayerHeight, (this._eyeHeight * 1.06f).ToString("0") + " cm");
+        }
+
+        /// <summary>
         /// Updates the scale.
         /// </summary>
         public void UpdateScale()
@@ -765,6 +859,22 @@ namespace GG2PlayerScale
 
             double scale = this._playerScale;
 
+            long eyeHeightPointer = 0;
+            if (this._memEditor.ResolvePointer(new long[]
+                {
+                    this._memEditor.MainModuleAddress + 0x02A4DB20,
+                    0x50, 0x130
+                }, out eyeHeightPointer))
+            {
+                byte[] eyeHeightBytes = this._memEditor.ReadMemory(eyeHeightPointer + 0x88, 4);
+                int eyeHeightInt = BitConverter.ToInt32(eyeHeightBytes, 0);
+                float nEyeHeight = (float)eyeHeightInt;
+                if (nEyeHeight != this._eyeHeight)
+                {
+                    this._eyeHeight = nEyeHeight;
+                    this.UpdateEyeHeightDisplay();
+                }               
+            };
             this._memEditor.WriteFloat(this._patchAddress + this._patchManager.ScaleOffset, (float)scale);
 
             float currentScale = (float)scale;
@@ -779,7 +889,7 @@ namespace GG2PlayerScale
 
             if(_memEditor.ReadFloat(this._patchAddress + this._patchManager.DefaultSceneHeightOffset, out normalHeight))
             {
-                float defaultOffset = (this._playerHeight - DEFAULT_HEIGHT) * normalHeight / DEFAULT_HEIGHT;
+                float defaultOffset = 0.0f; //(this._playerHeight - DEFAULT_HEIGHT) * normalHeight / DEFAULT_HEIGHT;
 
                 if (this._adjustHeight || this._scaleResetManager.Enabled)
                 {
@@ -873,14 +983,14 @@ namespace GG2PlayerScale
             
             uint arrayOffset = 0x00;
 
-            float deathOffsetZ = 24.0f - DEFAULT_HEIGHT + this._playerHeight * 0.93f * (float)scale;
+            float deathOffsetZ = -145.0f + this._eyeHeight * (float)scale;
             this.UpdateCameraTranslationVectors(ref arrayOffset, BitConverter.GetBytes((uint)0xC1A00000), rotFactorX * (1 - (float)scale) * 75.0f, rotFactorY * (1 - (float)scale) * 75.0f, deathOffsetZ);
 
-            float devilDeathOffsetZ = 110.0f - DEFAULT_HEIGHT + this._playerHeight * 0.93f * (float)scale;
+            float devilDeathOffsetZ = 110.0f - DEFAULT_HEIGHT + this._eyeHeight * (float)scale;
             this.UpdateCameraTranslationVectors(ref arrayOffset, BitConverter.GetBytes((uint)0xC2DC0000), rotFactorX * (1 - (float)scale) * 105.0f, rotFactorY * (1 - (float)scale) * 105.0f, devilDeathOffsetZ);
 
-            float cKissIdent = -100.0f + (1 - currentScale) * 150.0f;
-            float cKissDateIdent = -105.0f + (1 - currentScale) * 150.0f;
+            float cKissIdent = 60 - this._eyeHeight; //-100.0f + (1 - currentScale) * 150.0f;
+            float cKissDateIdent = 55 - this._eyeHeight; //-105.0f + (1 - currentScale) * 150.0f;
 
             this.UpdateCameraTranslationVectors(ref arrayOffset, BitConverter.GetBytes(cKissIdent), rotFactorX * (1 - (float)scale) * 40.0f, rotFactorY * (1 - (float)scale) * 40.0f, (float)(50.0f * (scale - 1.0f)));
             this.UpdateCameraTranslationVectors(ref arrayOffset, BitConverter.GetBytes(cKissDateIdent), rotFactorX * (1 - (float)scale) * 40.0f, rotFactorY * (1 - (float)scale) * 40.0f, (float)(45.0f * (scale - 1.0f)));
@@ -901,7 +1011,7 @@ namespace GG2PlayerScale
             }
                 
 
-                float eyeHeight = this._playerHeight * 0.93f * (float)scale;
+                float eyeHeight = this._eyeHeight * (float)scale;
                 float offsetDokiZ = -64.0f + 87.0f * (1 - currentScale) + eyeHeight;
                 /*if (eyeHeight < 250)
                 {*/
@@ -924,7 +1034,7 @@ namespace GG2PlayerScale
                 this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 4, 0.0f);
             }
 
-                eyeHeight = this._playerHeight * 0.87f * (float)scale;
+                eyeHeight = this._eyeHeight * 0.93f * (float)scale;
                 float offsetRend = (-1) * 150.0f * currentScale + eyeHeight;
                 /*if (eyeHeight < 250)
                 {*/
@@ -1050,7 +1160,7 @@ namespace GG2PlayerScale
         /// </summary>
         private void UpdateHeightDisplay()
         {
-            float currentHeight = (float)(this._playerHeight * this._playerScale);
+            float currentHeight = (float)(this._eyeHeight * 1.06f * this._playerScale);
             currentHeight = (float)Math.Round(currentHeight, ((currentHeight < 99.95) ? 1 : 0));
 
             string fieldValue = "";
@@ -1248,7 +1358,7 @@ namespace GG2PlayerScale
                 return;
             }
 
-            this.txtPlayerHeight.Enabled = enableDefaultFields;
+            //this.txtPlayerHeight.Enabled = enableDefaultFields;
             this.txtPlayerScale.Enabled = enableDefaultFields;
             this.txtTargetTimeValue.Enabled = enableDefaultFields;
             this.cbTargetTimeUnit.Enabled = enableDefaultFields;

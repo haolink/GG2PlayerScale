@@ -35,7 +35,6 @@
             this.txtPlayerScale = new System.Windows.Forms.TextBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.txtPlayerHeight = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.txtEndScale = new System.Windows.Forms.TextBox();
             this.chkEnableEndScale = new System.Windows.Forms.CheckBox();
@@ -53,6 +52,9 @@
             this.gbScaleReset = new System.Windows.Forms.GroupBox();
             this.chkResetScaleGradually = new System.Windows.Forms.CheckBox();
             this.chkResetWorldScale = new System.Windows.Forms.CheckBox();
+            this._lblEyeHeight = new System.Windows.Forms.Label();
+            this._lblPlayerHeight = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -95,7 +97,7 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.txtPlayerScale);
-            this.groupBox2.Location = new System.Drawing.Point(12, 147);
+            this.groupBox2.Location = new System.Drawing.Point(12, 169);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(453, 53);
             this.groupBox2.TabIndex = 2;
@@ -112,11 +114,13 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this._lblPlayerHeight);
+            this.groupBox4.Controls.Add(this.label8);
+            this.groupBox4.Controls.Add(this._lblEyeHeight);
             this.groupBox4.Controls.Add(this.label1);
-            this.groupBox4.Controls.Add(this.txtPlayerHeight);
             this.groupBox4.Location = new System.Drawing.Point(12, 95);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(453, 46);
+            this.groupBox4.Size = new System.Drawing.Size(453, 68);
             this.groupBox4.TabIndex = 1;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Static parameters";
@@ -127,16 +131,8 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(140, 20);
             this.label1.TabIndex = 1;
-            this.label1.Text = "Player height (cm):";
+            this.label1.Text = "Player eye height:";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // txtPlayerHeight
-            // 
-            this.txtPlayerHeight.Location = new System.Drawing.Point(155, 19);
-            this.txtPlayerHeight.Name = "txtPlayerHeight";
-            this.txtPlayerHeight.Size = new System.Drawing.Size(292, 20);
-            this.txtPlayerHeight.TabIndex = 0;
-            this.txtPlayerHeight.Text = "170";
             // 
             // groupBox3
             // 
@@ -153,7 +149,7 @@
             this.groupBox3.Controls.Add(this.label3);
             this.groupBox3.Controls.Add(this.txtTargetScale);
             this.groupBox3.Controls.Add(this.label2);
-            this.groupBox3.Location = new System.Drawing.Point(12, 284);
+            this.groupBox3.Location = new System.Drawing.Point(12, 306);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(453, 207);
             this.groupBox3.TabIndex = 4;
@@ -287,7 +283,7 @@
             // 
             this.gbScaleReset.Controls.Add(this.chkResetScaleGradually);
             this.gbScaleReset.Controls.Add(this.chkResetWorldScale);
-            this.gbScaleReset.Location = new System.Drawing.Point(12, 206);
+            this.gbScaleReset.Location = new System.Drawing.Point(12, 228);
             this.gbScaleReset.Name = "gbScaleReset";
             this.gbScaleReset.Size = new System.Drawing.Size(453, 72);
             this.gbScaleReset.TabIndex = 3;
@@ -316,11 +312,38 @@
             this.chkResetWorldScale.Text = "Reset world scale while scale reset is active";
             this.chkResetWorldScale.UseVisualStyleBackColor = true;
             // 
+            // _lblEyeHeight
+            // 
+            this._lblEyeHeight.Location = new System.Drawing.Point(152, 19);
+            this._lblEyeHeight.Name = "_lblEyeHeight";
+            this._lblEyeHeight.Size = new System.Drawing.Size(295, 20);
+            this._lblEyeHeight.TabIndex = 2;
+            this._lblEyeHeight.Text = "160 cm";
+            this._lblEyeHeight.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _lblPlayerHeight
+            // 
+            this._lblPlayerHeight.Location = new System.Drawing.Point(152, 42);
+            this._lblPlayerHeight.Name = "_lblPlayerHeight";
+            this._lblPlayerHeight.Size = new System.Drawing.Size(295, 20);
+            this._lblPlayerHeight.TabIndex = 4;
+            this._lblPlayerHeight.Text = "170 cm";
+            this._lblPlayerHeight.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // label8
+            // 
+            this.label8.Location = new System.Drawing.Point(9, 42);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(140, 20);
+            this.label8.TabIndex = 3;
+            this.label8.Text = "Estimated player height:";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(477, 501);
+            this.ClientSize = new System.Drawing.Size(477, 521);
             this.Controls.Add(this.gbScaleReset);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox4);
@@ -336,7 +359,6 @@
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.gbScaleReset.ResumeLayout(false);
@@ -353,7 +375,6 @@
         private System.Windows.Forms.Label lblButtonPressed;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox txtPlayerHeight;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.TextBox txtTargetTimeValue;
         private System.Windows.Forms.Label label3;
@@ -371,6 +392,9 @@
         private System.Windows.Forms.GroupBox gbScaleReset;
         private System.Windows.Forms.CheckBox chkResetWorldScale;
         private System.Windows.Forms.CheckBox chkResetScaleGradually;
+        private System.Windows.Forms.Label _lblEyeHeight;
+        private System.Windows.Forms.Label _lblPlayerHeight;
+        private System.Windows.Forms.Label label8;
     }
 }
 
