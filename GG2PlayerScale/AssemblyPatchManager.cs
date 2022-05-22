@@ -41,6 +41,11 @@ namespace GG2PlayerScale
         public int DokiDokiCameraOffset { get; private set; }
 
         /// <summary>
+        /// Rendezvous camera offset.
+        /// </summary>
+        public int RendezvousCameraOffset { get; private set; }
+
+        /// <summary>
         /// Doki doki detected on or off.
         /// </summary>
         public int DokiDokiSwitch { get; private set; }
@@ -97,6 +102,7 @@ namespace GG2PlayerScale
             this.SubtitleOffset = 0x58;
             this.CameraOrientationOffset = 0x60;
             this.DokiDokiCameraOffset = 0x70;
+            this.RendezvousCameraOffset = 0x80;
             this.DokiDokiSwitch = 0x08;
 
             long[] offsets = patchCode.IndexesOf(Encoding.ASCII.GetBytes("RETURN01")).ToArray();

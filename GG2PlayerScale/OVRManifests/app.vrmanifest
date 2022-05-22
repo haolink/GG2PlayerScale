@@ -1,0 +1,18 @@
+{
+	"applications": [
+		{
+			"app_key": "gg2.playerscale.openvr",
+			"launch_type": "binary",
+			"binary_path_windows": "GG2PlayerScale.exe",
+			"is_dashboard_overlay": false,
+			"action_manifest_path": "./actions.json",
+
+			"strings": {
+				"en_us": {
+					"name": "GG2 Player Scaler",
+					"description": "Can scale the player while playing Gal*Gun 2."
+				}
+			}
+		}
+	]
+}

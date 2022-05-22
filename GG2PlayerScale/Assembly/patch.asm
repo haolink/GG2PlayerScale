@@ -1,5 +1,22 @@
 use64
 
+offset_scale = 0x00
+offset_default_scene_height = 0x04
+offset_doki_doki_switch = 0x08
+offset_default_scene_height_alt = 0x0C
+offset_scale_base = 0x10
+offset_subtract_matrix = 0x20
+offset_current_scale = 0x28
+offset_multiplication_matrix = 0x30
+offset_multiplication_scale = 0x38
+offset_matrix_live_height = 0x40
+offset_current_camera = 0x48
+offset_subtitle = 0x58
+offset_camera_orientation = 0x60
+offset_camera_orientation_rendezvous = 0x70
+offset_doki_doki_camera_offset = 0x70
+offset_rendezvous_camera_offset = 0x80
+
 camscale:
   ;General data
   dd 3F800000h ;Scale
@@ -40,7 +57,12 @@ camscale:
   dd 00000000h
   dd 00000000h
   dd 00000000h
-  dd 00000000h  
+  dd 00000000h
+  ;Rendezvous camera offset
+  dd 00000000h
+  dd 00000000h
+  dd 00000000h
+  dd 00000000h
 
 ;Some distance so the code segments are nicely separated, makes debugging in CheatEngine easier.
 align 10h
@@ -63,8 +85,23 @@ camscale_assembly_codebegin:
    jne camscale_skip
    mov rbx,0xDEADCAFEDEADCAFE  ;Identifier
    ;xor rdx,rdx
-   mov eax,[rbx]
-   mov [rbx+28h],eax
+   ;TODO: Detection of input selection
+   ;mov rax,[rdx+0x70]
+   ;cmp rax,0x0000000000000000
+   ;mov rax,[rsp+0x270]
+   ;mov rdx,0x0000000000000000
+   ;cmp rax,rdx
+   ;jne camscale_skip
+   
+   ;Skip all checks
+   ;xor rax,rax
+   ;cmp eax,00000001
+   ;jne camscale_skip
+
+   ;overrule
+   ;mov eax,[rbx]
+   mov eax,0x3F800000
+   mov [rbx+offset_current_scale],eax
    mov eax,[rcx+00000164h]
 
 ;Sanity check on the height
@@ -77,10 +114,10 @@ camscale_assembly_codebegin:
    ;cmp eax,0x00000000 ;CG camera
    ;je camscale_dont_have_good_value
 camscale_sanity_load_backup_height:
-   mov eax,[rbx+04h] ;Check if the old value is still looking good
+   mov eax,[rbx+offset_default_scene_height] ;Check if the old value is still looking good
    jmp camscale_sanity_check_backup_height
 camscale_sanity_load_backup_height_alt:
-   mov eax,[rbx+0ch]
+   mov eax,[rbx+offset_default_scene_height_alt]
 camscale_sanity_check_backup_height:
    ;cmp eax,0x42a60000 ;doki doki backup camera
    ;je camscale_eax_is_doki_doki
@@ -96,19 +133,19 @@ camscale_eax_is_doki_doki:
    ;jmp camscale_write_status
 ;Sanity check is done
 camscale_accept_eax:
-   mov [rbx+38h],eax
-   movaps xmm0,[rbx+10h]
-   subps xmm0,[rbx+20h]
-   mulps xmm0,[rbx+30h]
-   subps xmm1,xmm0
+   mov [rbx+offset_multiplication_scale],eax
+   ;movaps xmm0,[rbx+offset_scale_base]
+   ;subps xmm0,[rbx+offset_subtract_matrix]
+   ;mulps xmm0,[rbx+offset_multiplication_matrix]
+   ;subps xmm1,xmm0
 camscale_write_status:
    cmp eax,0x42dc0000
    je camscale_store_alt_height
-   mov [rbx+04h],eax   
+   mov [rbx+offset_default_scene_height],eax   
 camscale_store_alt_height:
-   mov [rbx+0ch],eax
+   mov [rbx+offset_default_scene_height_alt],eax
 camscale_store_size_matrix:
-   mov [rbx+38h],eax
+   mov [rbx+offset_multiplication_scale],eax
    ;mov [rbx+8h],edx
 camscale_skip:
    pop rdx
@@ -163,7 +200,7 @@ camscale_live_assembly_codebegin:
    jne livecamscale_skip
 
    mov rax,[rcx+0188h]
-   mov [rbx+0060h],rax
+   mov [rbx+offset_camera_orientation],rax
    xor rax,rax
 
 livecamscale_adjust:
@@ -172,11 +209,17 @@ livecamscale_adjust:
    jne livecamfixedcam_prepareloop
 checkfordokidoki:
    xor r13,r13
-   mov r13d,[rbx+08h]
+   mov r13d,[rbx+offset_doki_doki_switch]
+   cmp r13d,0x00000002 ;We're in Rendezvous mode
+   je livecamscale_rendezvous_adjust
    cmp r13d,0x00000001 ;We're in Doki Doki Mode
    jne livecamscale_default_adjust
    mov r13,rbx
-   add r13,0x60
+   add r13,offset_camera_orientation
+   jmp livecamscale_fixed_adjust
+livecamscale_rendezvous_adjust:
+   mov r13,rbx
+   add r13,offset_camera_orientation_rendezvous
    jmp livecamscale_fixed_adjust
 livecamfixedcam_prepareloop:
    mov r13,0xCAFECAFEDEADDEAD
@@ -198,7 +241,7 @@ livecamscale_fixed_adjust:
    addps xmm1,[r13+0010h]
    jmp livecamscale_skip
 livecamscale_default_adjust:
-   addps xmm1,[rbx+0040h]
+   addps xmm1,[rbx+offset_matrix_live_height]
 livecamscale_skip:
    movdqu  xmm8, dqword [rsp+0x00]
    movdqu  xmm9, dqword [rsp+0x10]
@@ -208,7 +251,7 @@ livecamscale_skip:
    pop r12
    pop rbx
    pop rax
-   movaps [rbx+0010h],xmm1
+   movaps [rbx+offset_scale_base],xmm1
    movaps xmm0,[rcx+01A0h]
    jmp near [rip]
    dq 'RETURN02' ;Identifier

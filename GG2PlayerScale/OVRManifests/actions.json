@@ -1,0 +1,43 @@
+{
+	"default_bindings": [
+		{
+			"controller_type": "vive_controller",
+			"binding_url": "bindings_vive.json"
+		},
+		{
+			"controller_type": "knuckles",
+			"binding_url": "bindings_knuckles.json"
+		}
+	],
+	"actions": [
+		{
+			"name": "/actions/default/in/reset_viewport",
+			"requirement": "required",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/default/in/reset_viewport_rightgrip",
+			"requirement": "required",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/default/in/reset_viewport_leftgrip",
+			"requirement": "required",
+			"type": "boolean"
+		}
+	],
+	"action_sets": [
+		{
+			"name": "/actions/default",
+			"usage": "leftright"
+		}
+	],
+	"localization" : [
+		{
+			"language_tag": "en_US",
+			"/actions/default/in/reset_viewport": "Reset viewport",
+			"/actions/default/in/reset_viewport_rightgrip": "Reset viewport right-grip (Vive)",
+			"/actions/default/in/reset_viewport_leftgrip": "Reset viewport left-grip (Vive)"
+		}
+	]
+}

@@ -96,6 +96,10 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Assembly\patch.bin" />
+    <None Include="OVRManifests\actions.json" />
+    <None Include="OVRManifests\app.vrmanifest" />
+    <None Include="OVRManifests\bindings_knuckles.json" />
+    <None Include="OVRManifests\bindings_vive.json" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

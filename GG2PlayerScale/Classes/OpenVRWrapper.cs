@@ -186,8 +186,13 @@ namespace GG2PlayerScale
         /// </summary>
         private bool PreventClosure()
         {
-            VREvent_t ev = new VREvent_t();
+            if (this._system == null)
+            {
+                return false;
+            }
 
+            VREvent_t ev = new VREvent_t();
+            
             while (this._system.PollNextEvent(ref ev, (uint)Marshal.SizeOf(ev)))
             {
                 if (ev.eventType == (uint)(EVREventType.VREvent_Quit))
@@ -195,11 +200,12 @@ namespace GG2PlayerScale
                     this._system.AcknowledgeQuit_Exiting();
                     OpenVR.Shutdown();
                     this._system = null;
+                    return false;
                 }
             }
 
             return true;
-        }
+        }        
 
         /// <summary>
         /// Gets the pressed buttons on the device.
@@ -286,7 +292,12 @@ namespace GG2PlayerScale
                 {
                     vrEvents.Add(vrEvent);
                 }
-            } */           
+            } */
+
+            if (!this.PreventClosure())
+            {
+                return false;
+            }
 
             // #6 Update action set
             if (mActionSetArray == null)
@@ -300,7 +311,16 @@ namespace GG2PlayerScale
                 mActionSetArray = new VRActiveActionSet_t[] { actionSet };
             }
 
-            var errorUAS = OpenVR.Input.UpdateActionState(mActionSetArray, (uint)Marshal.SizeOf(typeof(VRActiveActionSet_t)));
+            var errorUAS = EVRInputError.InvalidHandle;
+
+            try
+            {
+                errorUAS = OpenVR.Input.UpdateActionState(mActionSetArray, (uint)Marshal.SizeOf(typeof(VRActiveActionSet_t)));
+            } 
+            catch(Exception ex)
+            {
+                errorUAS = EVRInputError.InvalidHandle;
+            }
             if (errorUAS != EVRInputError.None)
             {
                 return false;

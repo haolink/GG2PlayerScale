@@ -458,8 +458,17 @@ namespace GG2PlayerScale
                     }
                 }
 
-                this.UpdateScale();
-                WriteLabelThreadSafe(this.lblConnect, "Connected to Gal*Gun2\r\nBase: " + this._memEditor.MainModuleAddress.ToString("X16") + "\r\nHook: " + this._patchAddress.ToString("X16") + " / " + this._arrayPatchAddress.ToString("X16"));
+                try
+                {
+                    this.UpdateScale();
+                    WriteLabelThreadSafe(this.lblConnect, "Connected to Gal*Gun2\r\nBase: " + this._memEditor.MainModuleAddress.ToString("X16") + "\r\nHook: " + this._patchAddress.ToString("X16") + " / " + this._arrayPatchAddress.ToString("X16"));
+                } 
+                catch(Exception ex)
+                {
+                    //Don't crash, just resume!
+                }
+                
+                
             }
             else
             {
@@ -809,6 +818,7 @@ namespace GG2PlayerScale
             }
 
             bool isDokiDoki = false;
+            bool isRendezvous = false;
             long dokiPointer = 0;
             if (this._memEditor.ResolvePointer(new long[]
                 {
@@ -819,11 +829,27 @@ namespace GG2PlayerScale
                 byte[] isDokiBytes = this._memEditor.ReadMemory(dokiPointer + 0xA0, 1);
                 isDokiDoki = (isDokiBytes[0] == 1);
             };
+            if (this._memEditor.ResolvePointer(new long[]
+                {
+                    this._memEditor.MainModuleAddress + 0x02A27070,
+                    0xDF0, 0x30
+                }, out dokiPointer))
+            {
+                byte[] isRendezvousBytes = this._memEditor.ReadMemory(dokiPointer + 0x118, 1);
+                if (isRendezvousBytes != null)
+                {
+                    isRendezvous = (isRendezvousBytes[0] == 34);
+                }                
+            };
 
             byte[] setDoki = new byte[1] { 0 };
             if(isDokiDoki)
             {
                 setDoki = new byte[1] { 1 };
+            }
+            else if(isRendezvous)
+            {
+                setDoki = new byte[1] { 2 };
             }
             this._memEditor.WriteMemory(this._patchAddress + this._patchManager.DokiDokiSwitch, setDoki);
 
@@ -861,9 +887,66 @@ namespace GG2PlayerScale
 
             this.UpdateCameraTranslationVectors(ref arrayOffset, null, 0.0f, 0.0f, 0.0f);
 
-            this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 0, rotFactorX * (1 - (float)scale) * 50.0f);
-            this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 4, rotFactorY * (1 - (float)scale) * 50.0f);
-            this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 8, -64.0f + 87.0f * (1 - currentScale) + this._playerHeight * 0.93f * (float)scale);
+            /*if (scale <= 1.0f)
+            {*/
+            if (scale <= 1.0f)
+            {
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 0, rotFactorX * (1 - (float)scale) * 50.0f);
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 4, rotFactorY * (1 - (float)scale) * 50.0f);
+            } 
+            else
+            {
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 0, 0.0f);
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 4, 0.0f);
+            }
+                
+
+                float eyeHeight = this._playerHeight * 0.93f * (float)scale;
+                float offsetDokiZ = -64.0f + 87.0f * (1 - currentScale) + eyeHeight;
+                /*if (eyeHeight < 250)
+                {*/
+                    this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 8, offsetDokiZ);
+                /*}
+                else
+                {
+                    this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 8, 0.0f);
+                }*/
+
+            if (scale <= 1.0f)
+            {
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 0, rotFactorX * (1 - (float)scale) * 100.0f);
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 4, rotFactorY * (1 - (float)scale) * 100.0f);
+
+            }
+            else
+            {
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 0, 0.0f);
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 4, 0.0f);
+            }
+
+                eyeHeight = this._playerHeight * 0.87f * (float)scale;
+                float offsetRend = (-1) * 150.0f * currentScale + eyeHeight;
+                /*if (eyeHeight < 250)
+                {*/
+                    this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 8, offsetRend);
+                /*}
+                else
+                {
+                    this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 8, 0.00f);
+                } */               
+            /*} 
+            else
+            {
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 0, 0.0f);
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 4, 0.0f);
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.DokiDokiCameraOffset + 8, 0.0f);
+
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 0, 0.0f);
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 4, 0.0f);
+                this._memEditor.WriteFloat(this._patchAddress + this._patchManager.RendezvousCameraOffset + 8, 0.0f);
+            }*/
+            
+            
 
             /*//Block default death camera - camera value: -20.0, offset: 0x00
             this._memEditor.WriteMemory(this._arrayPatchAddress + 0x00, BitConverter.GetBytes((long)0xC1A00000));
